@@ -1,7 +1,9 @@
 '''
 Created on Apr 8, 2014
+Edited on Oct 22, 2020
 
 @author: Jan Verhoeven
+@author: Bassem Girgis
 
 @copyright: MIT license, see http://opensource.org/licenses/MIT
 '''
@@ -20,7 +22,8 @@ logger = logging.getLogger("zmqrpc")
 # given timeout.
 # The username/password can be used to provide 'simple' protection on the wire
 # (only PLAIN has been implemented, so be aware of sniffers).
-class ZmqSender(object):
+class ZmqSender:
+
     def __init__(
             self,
             zmq_req_endpoints=None,
@@ -48,26 +51,26 @@ class ZmqSender(object):
             try:
                 self.poller.unregister(self.req_socket)
             except Exception as e:
-                error_message = "Cannot unregister REQ socket to poller. Exception: {0}".format(
-                    e)
+                error_message = "Cannot un-register REQ socket to poller. "
+                "Exception: {0}".format(e)
             try:
                 self.req_socket.setsockopt(zmq.LINGER, 0)
             except Exception as e:
-                error_message = "Cannot set LINGER socket option. Exception: {0}".format(
-                    e)
+                error_message = "Cannot set LINGER socket option. "
+                "Exception: {0}".format(e)
             try:
                 for endpoint in self.zmq_req_endpoints:
                     logger.debug("Disconnect REQ socket to %s", endpoint)
                     self.req_socket.disconnect(endpoint)
             except Exception as e:
-                error_message = "Cannot disconnect REQ socket. Exception: {0}".format(
-                    e)
+                error_message = "Cannot disconnect REQ socket. "
+                "Exception: {0}".format(e)
             try:
                 logger.debug("Close REQ socket to %s", self.zmq_req_endpoints)
                 self.req_socket.close()
             except Exception as e:
-                error_message = "Cannot close REQ socket. Exception: {0}".format(
-                    e)
+                error_message = "Cannot close REQ socket. "
+                "Exception: {0}".format(e)
         self.req_socket = None
         if error_message is not None:
             logger.error(error_message)
@@ -78,8 +81,8 @@ class ZmqSender(object):
             try:
                 self.pub_socket.setsockopt(zmq.LINGER, 0)
             except Exception as e:
-                error_message = "Cannot set LINGER socket option. Exception: {0}".format(
-                    e)
+                error_message = "Cannot set LINGER socket option. "
+                "Exception: {0}".format(e)
             try:
                 address = self.zmq_pub_endpoint
                 # Since some recent version of pyzmq it does not accept unbind
@@ -90,21 +93,23 @@ class ZmqSender(object):
                 self.pub_socket.unbind(address)
             except Exception as e:
                 raise Exception(
-                    "Cannot unbind PUB socket from {0}. Exception: {1}".format(
-                        self.zmq_pub_endpoint, e))
+                    "Cannot unbind PUB socket from {0}. "
+                    "Exception: {1}".format(self.zmq_pub_endpoint, e))
             try:
                 logger.debug("Close PUB socket to %s", self.zmq_pub_endpoint)
                 self.pub_socket.close()
             except Exception as e:
-                error_message = "Cannot close PUB socket. Exception: {0}".format(
-                    e)
+                error_message = "Cannot close PUB socket. "
+                "Exception: {0}".format(e)
         self.pub_socket = None
         if error_message is not None:
             logger.error(error_message)
 
     def create_req_socket(self):
         if self.req_socket is not None:
-            raise "Want create new REQ socket, but old REQ Socket is not destroyed."
+            raise RuntimeError(
+                "Want create new REQ socket, but old REQ Socket is "
+                "not destroyed.")
 
         if self.zmq_req_endpoints:
             self.req_socket = self.context.socket(zmq.REQ)
@@ -191,7 +196,10 @@ class ZmqSender(object):
             except Exception as e:
                 self.recreate_req_socket = True
                 raise Exception(
-                    "Cannot send message on REQ socket. This is very exceptional. Please check logs. Marking REQ socket to be recreated on next try. Message can be considered lost. Exception: {0}".format(e))
+                    "Cannot send message on REQ socket. This is very "
+                    "exceptional. Please check logs. Marking REQ socket "
+                    "to be recreated on next try. Message can be considered "
+                    "lost. Exception: {0}".format(e))
             else:
                 # Wait for given time to receive response.
                 start_time = time.time()
@@ -211,10 +219,18 @@ class ZmqSender(object):
                 # REQ socket.
                 self.recreate_req_socket = True
                 raise Exception(
-                    "No response received on ZMQ Request to end point {0} in {1} seconds. Discarding message. Marking REQ socket to be recreated on next try.".format(
-                        self.zmq_req_endpoints, time_out_waiting_for_response_in_sec))
+                    "No response received on ZMQ Request to end point"
+                    " {0} in {1} seconds. Discarding message. Marking REQ "
+                    "socket to be recreated on next try.".format(
+                        self.zmq_req_endpoints,
+                        time_out_waiting_for_response_in_sec,
+                    )
+                )
 
-    def send(self, message, time_out_waiting_for_response_in_sec=60):
+    def send(
+            self,
+            message,
+            time_out_waiting_for_response_in_sec=60):
         # Create sockets if needed. Raise an exception if any problems are
         # encountered
         if self.recreate_pub_socket:
@@ -229,10 +245,12 @@ class ZmqSender(object):
 
         # Sockets must exist otherwise we would not be here...
         # Any errors in the following lines will throw an error that must be
-        # catched
+        # caught
         self._send_over_pub_socket(message)
         return self._send_over_req_socket(
-            message, time_out_waiting_for_response_in_sec)
+            message,
+            time_out_waiting_for_response_in_sec,
+        )
 
     def send_heartbeat(self):
         self.send("zmq_sub_heartbeat")
