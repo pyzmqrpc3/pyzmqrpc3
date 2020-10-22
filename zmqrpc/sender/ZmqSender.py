@@ -16,6 +16,7 @@ import time
 
 import zmq
 
+from ..heartbeat import zmq_sub_heartbeat
 from ..logger import logger
 
 
@@ -258,7 +259,7 @@ class ZmqSender:
         )
 
     def send_heartbeat(self):
-        self.send("zmq_sub_heartbeat")
+        self.send(zmq_sub_heartbeat)
 
     def destroy(self):
         self.destroy_req_socket()

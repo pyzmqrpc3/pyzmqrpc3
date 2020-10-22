@@ -13,6 +13,7 @@ Edited on Oct 22, 2020
 
 import json
 
+from ..heartbeat import zmq_sub_heartbeat
 from ..logger import logger
 from ..receiver import ZmqReceiver
 
@@ -50,7 +51,7 @@ class ZmqRpcServer(ZmqReceiver):
         self.rpc_functions = rpc_functions
 
     def handle_incoming_message(self, message):
-        if message == "zmq_sub_heartbeat":
+        if message == zmq_sub_heartbeat:
             return None
 
         status_code = 200

@@ -17,6 +17,7 @@ from typing import Optional, Tuple
 import zmq
 from zmq.auth.thread import ThreadAuthenticator
 
+from ..heartbeat import zmq_sub_heartbeat
 from ..logger import logger
 from .RepSocket import RepSocket
 from .SubSocket import SubSocket, SubSocketAddress
@@ -102,7 +103,7 @@ class ZmqReceiver:
                     self.__last_received_message = incoming_message
 
                     try:
-                        logger.debug("Got info from REP socket")
+                        logger.debug('Got info from REP socket')
 
                         response_message = self.handle_incoming_message(
                             incoming_message,
@@ -117,7 +118,7 @@ class ZmqReceiver:
 
                 if incoming_message is not None:
 
-                    if incoming_message != "zmq_sub_heartbeat":
+                    if incoming_message != zmq_sub_heartbeat:
                         self.__last_received_message = incoming_message
 
                     logger.debug("Got info from SUB socket")
@@ -149,7 +150,7 @@ class ZmqReceiver:
         return json.dumps(payload)
 
     def handle_incoming_message(self, message: str) -> Optional[str]:
-        if message == 'zmq_sub_heartbeat':
+        if message == zmq_sub_heartbeat:
             return None
 
         return self.create_response_message(
