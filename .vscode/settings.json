@@ -81,6 +81,7 @@
     "pyreadline3",
     "pyzmq",
     "pyzmqrpc",
+    "unregister",
     "zeromq",
     "zmqrpc"
   ],

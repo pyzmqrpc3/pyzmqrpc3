@@ -19,18 +19,24 @@ Implement a function on the server that can be invoked:
 
 Create a ZeroMQ server:
 
-    server = ZmqRpcServerThread(zmq_rep_bind_address="tcp://*:30000",
-            rpc_functions={"test_method": test_method})
+    server = ZmqRpcServerThread(
+            zmq_rep_bind_address="tcp://*:30000",
+            rpc_functions={"test_method": test_method},
+        )
     server.start()
 
 Create a client that connects to that server endpoint:
 
-    client = ZmqRpcClient(zmq_req_endpoints=["tcp://localhost:30000"])
+    client = ZmqRpcClient(
+        zmq_req_endpoints=["tcp://localhost:30000"],
+    )
 
 Have the client invoke the function on the server:
 
-    client.invoke(function_name="test_method",
-            function_parameters={"param1": "Hello", "param2": " world"})
+    client.invoke(
+        function_name="test_method",
+        function_parameters={"param1": "Hello", "param2": " world"},
+    )
 
 More examples below and are included in the repository.
 A unit test is also included.

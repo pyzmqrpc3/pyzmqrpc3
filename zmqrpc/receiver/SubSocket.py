@@ -12,11 +12,14 @@ Edited on Oct 22, 2020
 
 
 import time
+from typing import Optional, Tuple, Union
 
 import zmq
 import zmq.auth
 
 from ..logger import logger
+
+SubSocketAddress = Union[str, Tuple[str, int]]
 
 
 class SubSocket:
@@ -25,58 +28,78 @@ class SubSocket:
             self,
             ctx: zmq.Context,
             poller: zmq.Poller,
-            address,
-            timeout_in_sec=None):
-        self.ctx = ctx
-        self.poller = poller
-        self.address = address
-        self.timeout_in_sec = timeout_in_sec
-        self.zmq_socket = None
+            address: SubSocketAddress,
+            timeout_in_sec: Optional[int] = None):
+        self.__ctx = ctx
+        self.__poller = poller
+        self.__address: str = None
+        self.__timeout_in_sec: Optional[int] = timeout_in_sec
+        self.__zmq_socket = None
+        self.__last_received_time = None
+
+        if isinstance(address, str):
+            self.__address = str(address)
+        else:
+            address_list: Tuple[str, int] = tuple(address)
+            self.__address = address_list[0]
+            self.__timeout_in_sec: int = address_list[1]
+
         self.create()
 
-    def create(self):
-        if not self.zmq_socket:
-            self.zmq_socket = self.ctx.socket(zmq.SUB)
-            self.zmq_socket.setsockopt(zmq.SUBSCRIBE, b'')
-            self.zmq_socket.setsockopt(zmq.LINGER, 0)
-            if isinstance(self.address, str):
-                self.zmq_socket.connect(self.address)
-            else:
-                self.zmq_socket.connect(self.address[0])
-                self.timeout_in_sec = self.address[1]
-            self.poller.register(self.zmq_socket, zmq.POLLIN)
-            self.last_received_bytes = time.time()
-            logger.debug("Created SUB socket to %s", self.address)
+    def create(self) -> None:
+        if self.__zmq_socket is not None:
+            return
 
-    def destroy(self):
-        if self.zmq_socket:
-            self.poller.unregister(self.zmq_socket)
-            address = self.address
-            if isinstance(address, tuple):
-                address = address[0]
-            # Since some recent version of pyzmq it does not accept unbind
-            # of an address with '*'. Replace it with 0.0.0.0
-            if '*' in address:
-                address = address.replace('*', '0.0.0.0')
-            self.zmq_socket.disconnect(address)
-            self.zmq_socket.close()
-            while not self.zmq_socket.closed:
-                time.sleep(1)
-            self.zmq_socket = None
-            logger.debug("Destroyed SUB socket bound to %s", self.address)
+        self.__zmq_socket = zmq_socket = self.__ctx.socket(zmq.SUB)
 
-    def recv_string(self, socks):
-        if self.zmq_socket is not None and (
-                socks.get(self.zmq_socket) == zmq.POLLIN):
-            result = self.zmq_socket.recv_string()
-            self.last_received_bytes = time.time()
+        zmq_socket.setsockopt(zmq.SUBSCRIBE, b'')
+        zmq_socket.setsockopt(zmq.LINGER, 0)
+
+        zmq_socket.connect(self.__address)
+
+        self.__poller.register(zmq_socket, zmq.POLLIN)
+        self.__last_received_time = time.time()
+        logger.debug("Created SUB socket to %s", self.__address)
+
+    def destroy(self) -> None:
+        if self.__zmq_socket is None:
+            return
+
+        self.__poller.unregister(self.__zmq_socket)
+
+        address = self.__address
+        if isinstance(address, tuple):
+            address = address[0]
+        # Since some recent version of pyzmq it does not accept unbind
+        # of an address with '*'. Replace it with 0.0.0.0
+        if '*' in address:
+            address = address.replace('*', '0.0.0.0')
+
+        self.__zmq_socket.disconnect(address)
+        self.__zmq_socket.close()
+
+        while not self.__zmq_socket.closed:
+            time.sleep(1)
+
+        self.__zmq_socket = None
+
+        logger.debug("Destroyed SUB socket bound to %s", self.__address)
+
+    def recv_string(self, socks: dict) -> Optional[str]:
+        if self.__zmq_socket is not None and (
+                socks.get(self.__zmq_socket) == zmq.POLLIN):
+            result = self.__zmq_socket.recv_string()
+            self.__last_received_time = time.time()
             return result
-        if (self.timeout_in_sec is not None) and time.time(
-        ) > self.last_received_bytes + self.timeout_in_sec:
+
+        if (self.__timeout_in_sec is not None) and time.time(
+        ) > self.__last_received_time + self.__timeout_in_sec:
             # Recreate sockets
             logger.warning(
-                "Heartbeat timeout exceeded. Recreating SUB socket to %s",
-                self.address)
+                'Heartbeat timeout exceeded. Recreating SUB socket to "%s"',
+                self.__address
+            )
             self.destroy()
             self.create()
+
         return None

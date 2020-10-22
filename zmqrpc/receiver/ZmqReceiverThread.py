@@ -12,6 +12,7 @@ Edited on Oct 22, 2020
 
 
 from threading import Thread
+from typing import Optional, Tuple
 
 from .ZmqReceiver import ZmqReceiver
 
@@ -20,11 +21,11 @@ class ZmqReceiverThread(Thread):
 
     def __init__(
             self,
-            zmq_rep_bind_address=None,
-            zmq_sub_connect_addresses=None,
-            recreate_timeout=60,
-            username=None,
-            password=None):
+            zmq_rep_bind_address: Optional[str] = None,
+            zmq_sub_connect_addresses: Tuple[str, ...] = None,
+            recreate_timeout: int = 60,
+            username: Optional[str] = None,
+            password: Optional[str] = None):
         super().__init__()
 
         self.__receiver = ZmqReceiver(
@@ -35,11 +36,11 @@ class ZmqReceiverThread(Thread):
             password=password,
         )
 
-    def last_received_message(self):
-        return self.__receiver.last_received_message
+    def stop(self) -> None:
+        self.__receiver.stop()
 
     def run(self) -> None:
         self.__receiver.run()
 
-    def stop(self) -> None:
-        self.__receiver.stop()
+    def get_last_received_message(self) -> Optional[str]:
+        return self.__receiver.get_last_received_message()
