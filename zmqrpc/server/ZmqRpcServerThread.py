@@ -1,3 +1,5 @@
+
+
 '''
 Created on Apr 8, 2014
 Edited on Oct 22, 2020
@@ -42,8 +44,8 @@ class ZmqRpcServerThread(Thread):
     def last_received_message(self):
         return self.__server.last_received_message
 
-    def run(self)->None:
+    def run(self) -> None:
         self.__server.run()
 
-    def stop(self)->None:
+    def stop(self) -> None:
         self.__server.stop()
