@@ -5,13 +5,15 @@ Created on Apr 8, 2014
 
 @copyright: MIT license, see http://opensource.org/licenses/MIT
 '''
+import time
+
 from zmqrpc.ZmqRpcClient import ZmqRpcClient
 from zmqrpc.ZmqRpcServer import ZmqRpcServerThread
-import time
 
 
 def test_method(param1, param2):
     print "test_method invoked with params '{0}' and '{1}'".format(param1, param2)
+
 
 if __name__ == '__main__':
     client = ZmqRpcClient(
@@ -28,7 +30,9 @@ if __name__ == '__main__':
 
     client.invoke(
         function_name="test_method",
-        function_parameters={"param1": "param1", "param2": "param2"})   # Must be dict
+        function_parameters={
+            "param1": "param1",
+            "param2": "param2"})  # Must be dict
 
     # Wait a bit to make sure message has been received
     time.sleep(2)

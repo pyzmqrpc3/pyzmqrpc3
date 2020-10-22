@@ -10,7 +10,12 @@ setup(
     author_email='jan@captive.nl',
     url='https://github.com/jverhoeven/pyzmqrpc',
     download_url='https://github.com/jverhoeven/pyzmqrpc/tarball/2.0.0',
-    keywords=['zeromq', 'rpc', 'pyzmq'],
-    install_requires=["pyzmq>=15.0.0", "future>=0.15.0"],
-    classifiers=[]
+    keywords=[
+        'zeromq',
+        'rpc',
+        'pyzmq'],
+    install_requires=[
+        "pyzmq>=15.0.0",
+        "future>=0.15.0"],
+    classifiers=[],
 )

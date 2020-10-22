@@ -12,14 +12,19 @@ Created on Mar 31, 2014
 from __future__ import print_function
 
 import argparse
-import sys
 import signal
+import sys
+
 import zmq
 
-
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Reads and prints messages from a remote pub socket.')
-    parser.add_argument('--sub', nargs='+', required=True, help='The PUB endpoint')
+    parser = argparse.ArgumentParser(
+        description='Reads and prints messages from a remote pub socket.')
+    parser.add_argument(
+        '--sub',
+        nargs='+',
+        required=True,
+        help='The PUB endpoint')
 
     args = parser.parse_args()
     print("Starting zmqsnoop...")
