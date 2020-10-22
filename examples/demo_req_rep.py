@@ -2,35 +2,48 @@
 
 '''
 Created on Apr 8, 2014
+Edited on Oct 22, 2020
 
 @author: Jan Verhoeven
+@author: Bassem Girgis
 
 @copyright: MIT license, see http://opensource.org/licenses/MIT
 '''
 
 
+import sys
 import time
+from typing import Optional, Tuple
 
-from zmqrpc.ZmqRpcClient import ZmqRpcClient
-from zmqrpc.ZmqRpcServer import ZmqRpcServerThread
-
-
-def test_method(param1, param2):
-    print "test_method invoked with params '{0}' and '{1}'".format(param1, param2)
-    return "test_method response text"
+from zmqrpc import ZmqRpcClient, ZmqRpcServerThread
 
 
-if __name__ == '__main__':
+def test_method(param1, param2) -> str:
+    print(
+        'test_method invoked with params "{0}" and "{1}"'.format(
+            param1,
+            param2,
+        )
+    )
+    return 'test_method response text'
+
+
+def main(args: Optional[Tuple[str]] = None) -> int:
+
     client = ZmqRpcClient(
-        zmq_req_endpoints=["tcp://localhost:30000"],            # List
-        username="test",
-        password="test")
+        zmq_req_endpoints=['tcp://localhost:30000'],            # List
+        username='test',
+        password='test',
+    )
 
     server = ZmqRpcServerThread(
-        zmq_rep_bind_address="tcp://*:30000",
-        rpc_functions={"test_method": test_method},             # Dict
-        username="test",
-        password="test")
+        zmq_rep_bind_address='tcp://*:30000',
+        rpc_functions={             # Dict
+            'test_method': test_method,
+        },
+        username='test',
+        password='test',
+    )
     server.start()
 
     # Wait a bit since sockets may not have been connected immediately
@@ -38,12 +51,14 @@ if __name__ == '__main__':
 
     # REQ/REQ sockets can carry a response
     response = client.invoke(
-        function_name="test_method",
-        function_parameters={
-            "param1": "param1",
-            "param2": "param2"})  # Must be dict
+        function_name='test_method',
+        function_parameters={  # Must be dict
+            'param1': 'param1',
+            'param2': 'param2',
+        },
+    )
 
-    print "response: {0}".format(response)
+    print('response: {0}'.format(response))
 
     # Wait a bit to make sure message has been received
     time.sleep(2)
@@ -51,3 +66,9 @@ if __name__ == '__main__':
     # Clean up
     server.stop()
     server.join()
+
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())
