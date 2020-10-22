@@ -1,6 +1,35 @@
 
 
+import os
+from typing import List
+
 from setuptools import setup
+
+_dir = os.path.dirname(__file__)
+
+_init_path = os.path.join(_dir, 'zmqrpc', '__init__.py')
+_req_path = os.path.join(_dir, 'requirements.txt')
+
+
+def _get_version() -> str:
+    for line in open(_init_path, 'r').readlines():
+        if 'version_info' not in line:
+            continue
+        ver_tuple_str = line.split('=')[1].replace('(', '').replace(')', '')
+        return '.'.join(
+            tuple(
+                x.strip()
+                for x in ver_tuple_str.split(',')
+            )
+        )
+
+
+def _get_requirements() -> List[str]:
+    return [
+        line.strip()
+        for line in open(_req_path, 'r').readlines()
+    ]
+
 
 name = 'pyamqrpc3'
 
@@ -8,30 +37,40 @@ description = 'A simple ZMQ RPC extension with JSON for message serialization'
 
 long_description = \
     """
-The `pyreadline3` package is based on the stale package `pyreadline` located
-at https://github.com/pyreadline/pyreadline.
-The original `pyreadline` package is a python implementation of GNU `readline`
-functionality.
-It is based on the `ctypes` based UNC `readline` package by Gary Bishop.
-It is not complete.
-It has been tested for use with Windows 10.
+This Python package adds basic Remote Procedure Call functionalities to ZeroMQ.
+It does not do advanced serializing, but simply uses JSON call and
+response structures.
 
-Version 3.0+ or pyreadline3 runs on Python 3.3+.
+To Install:
 
-Features
+pip install pyzmqrpc3
 
-- keyboard text selection and copy/paste
-- Shift-arrowkeys for text selection
-- Control-c can be used for copy activate with allow_ctrl_c(True) in config file
-- Double tapping ctrl-c will raise a KeyboardInterrupt, use ctrl_c_tap_time_interval(x)
-- where x is your preferred tap time window, default 0.3 s.
-- paste pastes first line of content on clipboard.
-- ipython_paste, pastes tab-separated data as list of lists or numpy array if all data is numeric
-- paste_mulitline_code pastes multi line code, removing any empty lines.
+Usage:
 
-The latest development version is always available at the project git
-repository https://github.com/brgirgis/pyreadline3
+Implement a function on the server that can be invoked:
+
+    def test_method(param1, param2):
+        return param1 + param2
+
+Create a ZeroMQ server:
+
+    server = ZmqRpcServerThread(zmq_rep_bind_address="tcp://*:30000",
+            rpc_functions={"test_method": test_method})
+    server.start()
+
+Create a client that connects to that server endpoint:
+
+    client = ZmqRpcClient(zmq_req_endpoints=["tcp://localhost:30000"])
+
+Have the client invoke the function on the server:
+
+    client.invoke(function_name="test_method",
+            function_parameters={"param1": "Hello", "param2": " world"})
+
+The latest development version and more examples below and are included in
+project repository https://github.com/brgirgis/pyzmqrpc3
 """
+
 authors = {
     'Bassem': ('Bassem Girgis', 'brgirgis@gmail.com'),
     'Jorgen': ('Jan Verhoeven', 'jan@captive.nl'),
@@ -48,12 +87,10 @@ keywords = [
     'rpc',
 ]
 
-license_name = 'MIT'
+version = _get_version()
+install_requires = _get_requirements()
 
-install_requires = [
-    "pyzmq>=15.0.0",
-    "future>=0.15.0",
-]
+license_name = 'MIT'
 
 packages = [
     'zmqrpc',
