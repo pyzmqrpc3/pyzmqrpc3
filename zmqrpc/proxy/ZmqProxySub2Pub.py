@@ -44,13 +44,14 @@ class ZmqProxySub2Pub(ZmqReceiver):
         self.sender = ZmqSender(
             zmq_pub_endpoint=zmq_pub_bind_address,
             username=username_pub,
-            password=username_pub)
+            password=username_pub,
+        )
 
     def handle_incoming_message(self, message):
         # We don't care for the response, since we cannot pass it back via the
         # pub socket or we got none from a pub socket
         try:
-            self.sender.send(message, time_out_waiting_for_response_in_sec=60)
+            self.sender.send(message, time_out_in_sec=60)
         except Exception as e:
             logger.error(e)
         return None

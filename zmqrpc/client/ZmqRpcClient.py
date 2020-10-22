@@ -46,12 +46,12 @@ class ZmqRpcClient(ZmqSender):
             self,
             function_name: str,
             function_parameters=None,
-            time_out_waiting_for_response_in_sec=600):
+            time_out_in_sec=600):
         '''
         Invokes a function on a remote ZeroMQ process and returns the result
         of calling the function in case of a REQ socket. Parameters should
         be a dict.
-        time_out_waiting_for_response_in_sec indicates the time to wait
+        time_out_in_sec indicates the time to wait
         for a response of the server. If none is received in the given time
         the system does not try again and will discard the message, never
         knowing if it was received by the server or not.
@@ -60,4 +60,4 @@ class ZmqRpcClient(ZmqSender):
         # Try to serialize. If it fails, throw an error and exit.
         message_json = self.serialize_function_call(
             function_name, function_parameters)
-        return self.send(message_json, time_out_waiting_for_response_in_sec)
+        return self.send(message_json, time_out_in_sec)

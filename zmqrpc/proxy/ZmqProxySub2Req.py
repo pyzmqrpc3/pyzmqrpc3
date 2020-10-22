@@ -50,7 +50,7 @@ class ZmqProxySub2Req(ZmqReceiver):
         # We don't care for the response, since we cannot pass it back via the
         # pub socket or we got none from a pub socket
         try:
-            self.sender.send(message, time_out_waiting_for_response_in_sec=60)
+            self.sender.send(message, time_out_in_sec=60)
         except Exception as e:
             logger.error(e)
         return None

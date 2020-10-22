@@ -21,9 +21,9 @@ class ZmqProxyThread(Thread):
 
         self.proxy = None
 
-    def last_received_message(self):
+    def get_last_received_message(self):
         if self.proxy:
-            return self.proxy.last_received_message
+            return self.proxy.get_last_received_message()
         return None
 
     def run(self):

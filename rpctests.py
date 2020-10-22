@@ -64,8 +64,8 @@ class TestZmqPackage(unittest.TestCase):
             password="password")
         receiver_thread.start()
 
-        sender.send("test", time_out_waiting_for_response_in_sec=3)
-        self.assertEquals(receiver_thread.last_received_message(), 'test')
+        sender.send("test", time_out_in_sec=3)
+        self.assertEquals(receiver_thread.get_last_received_message(), 'test')
 
         print("Test if sending wrong password over REP/REQ connection results in error (actually timeout)")
         sender = ZmqSender(
@@ -73,7 +73,7 @@ class TestZmqPackage(unittest.TestCase):
             username="username",
             password="wrongpassword")
         try:
-            sender.send("test", time_out_waiting_for_response_in_sec=3)
+            sender.send("test", time_out_in_sec=3)
             print("Error. Did get answer from remote system which was not expected")
         except BaseException:
             # Could not send message, which is ok in this case
@@ -99,9 +99,9 @@ class TestZmqPackage(unittest.TestCase):
             password="password")
         receiver_thread.start()
 
-        sender.send("test", time_out_waiting_for_response_in_sec=3)
+        sender.send("test", time_out_in_sec=3)
 
-        self.assertEquals(receiver_thread.last_received_message(), 'test')
+        self.assertEquals(receiver_thread.get_last_received_message(), 'test')
 
         print("Test if sending wrong password over REP/REQ connection results in error (actually timeout)")
         sender = ZmqSender(
@@ -109,7 +109,7 @@ class TestZmqPackage(unittest.TestCase):
             username="username",
             password="wrongpassword")
         try:
-            sender.send("test", time_out_waiting_for_response_in_sec=3)
+            sender.send("test", time_out_in_sec=3)
             print("Error. Did get answer from remote system which was not expected")
         except BaseException:
             # Could not send message, which is ok in this case
@@ -137,7 +137,7 @@ class TestZmqPackage(unittest.TestCase):
         # send_pub_socket
         time.sleep(0.1)
 
-        self.assertEqual(receiver_thread.last_received_message(), 'test')
+        self.assertEqual(receiver_thread.get_last_received_message(), 'test')
 
         receiver_thread.stop()
         receiver_thread.join()
@@ -162,7 +162,7 @@ class TestZmqPackage(unittest.TestCase):
         # send_pub_socket
         time.sleep(0.1)
 
-        self.assertEqual(receiver_thread.last_received_message(), 'test')
+        self.assertEqual(receiver_thread.get_last_received_message(), 'test')
 
         receiver_thread.stop()
         receiver_thread.join()
@@ -190,7 +190,7 @@ class TestZmqPackage(unittest.TestCase):
             function_parameters={
                 "param1": "value1",
                 "param2": "value2"},
-            time_out_waiting_for_response_in_sec=3)
+            time_out_in_sec=3)
 
         server_thread.stop()
         server_thread.join()
@@ -221,7 +221,7 @@ class TestZmqPackage(unittest.TestCase):
                 function_parameters={
                     "param1": "value1",
                     "param2": "value2"},
-                time_out_waiting_for_response_in_sec=3)
+                time_out_in_sec=3)
         except Exception as e:
             self.assertEquals(
                 str(e),
@@ -254,7 +254,7 @@ class TestZmqPackage(unittest.TestCase):
                 function_parameters={
                     "param1": "value1",
                     "param2": "value2"},
-                time_out_waiting_for_response_in_sec=3)
+                time_out_in_sec=3)
         except Exception as e:
             self.assertEqual(
                 str(e),
@@ -286,7 +286,7 @@ class TestZmqPackage(unittest.TestCase):
             function_parameters={
                 "param1": "value1sub",
                 "param2": "value2pub"},
-            time_out_waiting_for_response_in_sec=3)
+            time_out_in_sec=3)
 
         # Wait a bit to make sure message is sent...
         time.sleep(1)
@@ -318,13 +318,13 @@ class TestZmqPackage(unittest.TestCase):
         # window.
         time.sleep(2)
 
-        self.assertEqual(receiver_thread.last_received_message(), 'test')
+        self.assertEqual(receiver_thread.get_last_received_message(), 'test')
 
         # Now send another but with 2 seconds delay, which should be ok
         sender.send("test2")
         time.sleep(2)
 
-        self.assertEqual(receiver_thread.last_received_message(), 'test2')
+        self.assertEqual(receiver_thread.get_last_received_message(), 'test2')
         self.assertEqual(
             receiver_thread.receiver.sub_sockets[0].zmq_socket,
             first_socket)
@@ -334,7 +334,7 @@ class TestZmqPackage(unittest.TestCase):
         sender.send("test3")
         time.sleep(4)
 
-        self.assertEqual(receiver_thread.last_received_message(), 'test3')
+        self.assertEqual(receiver_thread.get_last_received_message(), 'test3')
         second_socket = receiver_thread.receiver.sub_sockets[0].zmq_socket
         self.assertNotEqual(second_socket, first_socket)
 
@@ -342,7 +342,7 @@ class TestZmqPackage(unittest.TestCase):
         sender.send("test4")
         time.sleep(2)
 
-        self.assertEqual(receiver_thread.last_received_message(), 'test4')
+        self.assertEqual(receiver_thread.get_last_received_message(), 'test4')
         self.assertEqual(
             receiver_thread.receiver.sub_sockets[0].zmq_socket,
             second_socket)
@@ -370,7 +370,7 @@ class TestZmqPackage(unittest.TestCase):
         # window.
         time.sleep(2)
 
-        self.assertEqual(receiver_thread.last_received_message(), 'test')
+        self.assertEqual(receiver_thread.get_last_received_message(), 'test')
 
         # Now send another but with 2 seconds delay, which should be ok, followed by 4 heartbeats.
         # Socket should not be refreshed.
@@ -384,7 +384,7 @@ class TestZmqPackage(unittest.TestCase):
         time.sleep(2)
         sender.send_heartbeat()
 
-        self.assertEqual(receiver_thread.last_received_message(), 'test2')
+        self.assertEqual(receiver_thread.get_last_received_message(), 'test2')
         self.assertEqual(
             receiver_thread.receiver.sub_sockets[0].zmq_socket,
             first_socket)
@@ -394,7 +394,7 @@ class TestZmqPackage(unittest.TestCase):
         sender.send("test3")
         time.sleep(4)
 
-        self.assertEqual(receiver_thread.last_received_message(), 'test3')
+        self.assertEqual(receiver_thread.get_last_received_message(), 'test3')
         second_socket = receiver_thread.receiver.sub_sockets[0].zmq_socket
         self.assertNotEqual(second_socket, first_socket)
 
@@ -402,7 +402,7 @@ class TestZmqPackage(unittest.TestCase):
         sender.send("test4")
         time.sleep(2)
 
-        self.assertEqual(receiver_thread.last_received_message(), 'test4')
+        self.assertEqual(receiver_thread.get_last_received_message(), 'test4')
         self.assertEqual(
             receiver_thread.receiver.sub_sockets[0].zmq_socket,
             second_socket)
@@ -434,7 +434,7 @@ class TestZmqPackage(unittest.TestCase):
             function_parameters={
                 "param1": "testxx-value1",
                 "param2": "value2"},
-            time_out_waiting_for_response_in_sec=3)
+            time_out_in_sec=3)
         # Take 2 seconds to see if it works in case of within the 3 seconds
         # window.
         time.sleep(2)
@@ -449,7 +449,7 @@ class TestZmqPackage(unittest.TestCase):
             function_parameters={
                 "param1": "testxx-value2",
                 "param2": "value2"},
-            time_out_waiting_for_response_in_sec=3)
+            time_out_in_sec=3)
         time.sleep(2)
         client.send_heartbeat()
         time.sleep(2)
@@ -470,7 +470,7 @@ class TestZmqPackage(unittest.TestCase):
             function_parameters={
                 "param1": "testxx-value3",
                 "param2": "value2"},
-            time_out_waiting_for_response_in_sec=3)
+            time_out_in_sec=3)
         time.sleep(4)
 
         self.assertEquals(test_state.last_invoked_param1, "testxx-value3")
@@ -483,7 +483,7 @@ class TestZmqPackage(unittest.TestCase):
             function_parameters={
                 "param1": "testxx-value4",
                 "param2": "value2"},
-            time_out_waiting_for_response_in_sec=3)
+            time_out_in_sec=3)
         time.sleep(2)
 
         self.assertEquals(test_state.last_invoked_param1, "testxx-value4")
@@ -522,7 +522,7 @@ class TestZmqPackage(unittest.TestCase):
             function_parameters={
                 "param1": "value1",
                 "param2": "value2"},
-            time_out_waiting_for_response_in_sec=3)
+            time_out_in_sec=3)
 
         server_thread.stop()
         server_thread.join()
@@ -566,7 +566,7 @@ class TestZmqPackage(unittest.TestCase):
             function_parameters={
                 "param1": "value1",
                 "param2": "value2"},
-            time_out_waiting_for_response_in_sec=3)
+            time_out_in_sec=3)
 
         server_thread.stop()
         server_thread.join()
@@ -601,7 +601,7 @@ class TestZmqPackage(unittest.TestCase):
             function_parameters={
                 "param1": "value2sub",
                 "param2": "value2pub"},
-            time_out_waiting_for_response_in_sec=3)
+            time_out_in_sec=3)
 
         # Wait a bit to make sure message is sent...
         time.sleep(1)
@@ -650,13 +650,13 @@ class TestZmqPackage(unittest.TestCase):
         # send_pub_socket
         time.sleep(1)
         print("last received message by proxy_sub_req_thread: {0}".format(
-            proxy_sub_req_thread.last_received_message()))
+            proxy_sub_req_thread.get_last_received_message()))
         print("last received message by proxy_rep_pub_thread: {0}".format(
-            proxy_rep_pub_thread.last_received_message()))
+            proxy_rep_pub_thread.get_last_received_message()))
         print("last received message by receiver_thread: {0}".format(
-            receiver_thread.last_received_message()))
+            receiver_thread.get_last_received_message()))
 
-        self.assertEqual(receiver_thread.last_received_message(), 'test')
+        self.assertEqual(receiver_thread.get_last_received_message(), 'test')
 
         receiver_thread.stop()
         receiver_thread.join()
@@ -705,7 +705,7 @@ class TestZmqPackage(unittest.TestCase):
             function_parameters={
                 "param1": "value1viaproxy",
                 "param2": "value2viaproxy"},
-            time_out_waiting_for_response_in_sec=30)
+            time_out_in_sec=30)
 
         time.sleep(1)
 
@@ -723,7 +723,7 @@ class TestZmqPackage(unittest.TestCase):
             function_parameters={
                 "param1": "value1-2viaproxy",
                 "param2": "value2viaproxy"},
-            time_out_waiting_for_response_in_sec=30)
+            time_out_in_sec=30)
 
         # Wait some time to be sure it has been processed and the system is
         # retrying delivery.

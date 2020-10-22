@@ -41,8 +41,8 @@ class ZmqRpcServerThread(Thread):
             password=password,
         )
 
-    def last_received_message(self):
-        return self.__server.last_received_message
+    def get_last_received_message(self):
+        return self.__server.get_last_received_message()
 
     def run(self) -> None:
         self.__server.run()

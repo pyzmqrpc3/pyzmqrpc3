@@ -39,20 +39,24 @@ class ZmqProxyRep2Req(ZmqReceiver):
             password=password_rep,
         )
 
-        self.sender = ZmqSender(
+        self.__sender = ZmqSender(
             zmq_req_endpoints=zmq_req_connect_addresses,
             username=username_req,
-            password=password_req)
+            password=password_req,
+        )
 
     def handle_incoming_message(self, message):
         # Pass on the response from the forwarding socket.
         try:
-            response_message = self.sender.send(
-                message, time_out_waiting_for_response_in_sec=60)
+            self.__sender.send(
+                message, time_out_in_sec=60)
             return self.create_response_message(
                 status_code=200,
                 status_message="OK",
-                response_message=response_message)
+            )
         except Exception as e:
             return self.create_response_message(
-                status_code=400, status_message="Error", response_message=e)
+                status_code=400,
+                status_message='Error',
+                response_message=e,
+            )

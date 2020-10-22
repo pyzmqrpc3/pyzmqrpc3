@@ -39,17 +39,21 @@ class ZmqProxyRep2Pub(ZmqReceiver):
             password=password_rep,
         )
 
-        self.sender = ZmqSender(
+        self.__sender = ZmqSender(
             zmq_req_endpoints=None,
             zmq_pub_endpoint=zmq_pub_bind_address,
             username=username_pub,
-            password=password_pub)
+            password=password_pub,
+        )
 
     def handle_incoming_message(self, message):
         try:
-            self.sender.send(message, time_out_waiting_for_response_in_sec=60)
+            self.__sender.send(message, time_out_in_sec=60)
             # Pub socket does not provide response message, so return OK message
-            return self.create_response_message(200, "OK", None)
+            return self.create_response_message(200, "OK")
         except Exception as e:
             return self.create_response_message(
-                status_code=400, status_message="Error", response_message=e)
+                status_code=400,
+                status_message="Error",
+                response_message=e,
+            )
