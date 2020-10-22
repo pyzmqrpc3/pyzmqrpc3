@@ -1,10 +1,26 @@
 
+'''
+Created on Apr 8, 2014
+Edited on Oct 22, 2020
 
-# This class implements a simple message forwarding from a REQ/REP connection to another
-# REQ/REP connection.
+@author: Jan Verhoeven
+@author: Bassem Girgis
+
+@copyright: MIT license, see http://opensource.org/licenses/MIT
+'''
+
+from ..receiver import ZmqReceiver
+from ..sender import ZmqSender
+
+
 class ZmqProxyRep2Req(ZmqReceiver):
-    # Note, at the moment username/password only protects the REQ-REP socket
-    # connection
+    '''
+    This class implements a simple message forwarding from a REQ/REP
+    connection to another REQ/REP connection.
+    Note, at the moment username/password only protects the REQ-REP socket
+    connection
+    '''
+
     def __init__(
             self,
             zmq_rep_bind_address,
@@ -14,12 +30,13 @@ class ZmqProxyRep2Req(ZmqReceiver):
             password_rep=None,
             username_req=None,
             password_req=None):
-        ZmqReceiver.__init__(
-            self,
+        super().__init__(
             zmq_rep_bind_address=zmq_rep_bind_address,
             recreate_sockets_on_timeout_of_sec=recreate_sockets_on_timeout_of_sec,
             username=username_rep,
-            password=password_rep)
+            password=password_rep,
+        )
+
         self.sender = ZmqSender(
             zmq_req_endpoints=zmq_req_connect_addresses,
             username=username_req,

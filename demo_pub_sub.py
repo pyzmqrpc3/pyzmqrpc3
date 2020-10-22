@@ -1,18 +1,24 @@
 '''
 Created on Apr 8, 2014
+Edited on Oct 22, 2020
 
 @author: Jan Verhoeven
+@author: Bassem Girgis
 
 @copyright: MIT license, see http://opensource.org/licenses/MIT
 '''
 import time
 
-from zmqrpc.ZmqRpcClient import ZmqRpcClient
-from zmqrpc.ZmqRpcServer import ZmqRpcServerThread
+from zmqrpc import ZmqRpcClient, ZmqRpcServerThread
 
 
 def test_method(param1, param2):
-    print "test_method invoked with params '{0}' and '{1}'".format(param1, param2)
+    print(
+        "test_method invoked with params '{0}' and '{1}'".format(
+            param1,
+            param2,
+        )
+    )
 
 
 if __name__ == '__main__':

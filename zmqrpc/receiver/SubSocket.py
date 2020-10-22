@@ -1,3 +1,12 @@
+'''
+Created on Apr 8, 2014
+Edited on Oct 22, 2020
+
+@author: Jan Verhoeven
+@author: Bassem Girgis
+
+@copyright: MIT license, see http://opensource.org/licenses/MIT
+'''
 
 import logging
 import time
@@ -8,7 +17,8 @@ import zmq.auth
 logger = logging.getLogger("zmqrpc")
 
 
-class SubSocket(object):
+class SubSocket:
+
     def __init__(self, ctx, poller, address, timeout_in_sec=None):
         self.ctx = ctx
         self.poller = poller

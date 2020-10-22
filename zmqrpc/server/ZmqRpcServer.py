@@ -1,29 +1,36 @@
 '''
 Created on Apr 8, 2014
+Edited on Oct 22, 2020
 
 @author: Jan Verhoeven
+@author: Bassem Girgis
 
 @copyright: MIT license, see http://opensource.org/licenses/MIT
 '''
+
 import json
 import logging
-from threading import Thread
 
-from .ZmqReceiver import ZmqReceiver
+from ..receiver import ZmqReceiver
 
 logger = logging.getLogger("zmqrpc")
 
-# The ZmqRpcServer implements a ZmqReceiver and extends it with the ability to host one or more methods
-# that can be invoked by a ZmqRpcClient. In case a PUB/SUB connection is used, no reponse is provided.
-# In case a REQ/REQ connection is used a response must be provided in order for the system
-# to know the call was successful.
-# The ZmqRpcServer constructor takes a collection of either REP or SUB addresses for the ZMQ layer.
-# The rpc_functions are dict structures mapping a string value to a real method implementation.
-# A username/password may be used for REQ/REP pairs (does not seem to be
-# working for PUB/SUB sockets
-
 
 class ZmqRpcServer(ZmqReceiver):
+    '''
+    The ZmqRpcServer implements a ZmqReceiver and extends it with the ability
+    to host one or more methods that can be invoked by a ZmqRpcClient.
+    In case a PUB/SUB connection is used, no response is provided.
+    In case a REQ/REQ connection is used a response must be provided in
+    order for the system to know the call was successful.
+    The ZmqRpcServer constructor takes a collection of either REP or SUB
+    addresses for the ZMQ layer.
+    The rpc_functions are dict structures mapping a string value to a
+    real method implementation.
+    A username/password may be used for REQ/REP pairs (does not seem to be
+    working for PUB/SUB sockets
+    '''
+
     def __init__(
             self,
             zmq_rep_bind_address=None,
@@ -32,13 +39,13 @@ class ZmqRpcServer(ZmqReceiver):
             recreate_sockets_on_timeout_of_sec=600,
             username=None,
             password=None):
-        ZmqReceiver.__init__(
-            self,
+        super().__init__(
             zmq_rep_bind_address,
             zmq_sub_connect_addresses,
             recreate_sockets_on_timeout_of_sec,
             username,
-            password)
+            password,
+        )
         self.rpc_functions = rpc_functions
 
     def handle_incoming_message(self, message):

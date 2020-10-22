@@ -1,11 +1,12 @@
 '''
 Created on Apr 8, 2014
+Edited on Oct 22, 2020
 
 @author: Jan Verhoeven
+@author: Bassem Girgis
 
 @copyright: MIT license, see http://opensource.org/licenses/MIT
 '''
-from __future__ import print_function
 
 import json
 import logging
@@ -20,11 +21,14 @@ from .SubSocket import SubSocket
 logger = logging.getLogger("zmqrpc")
 
 
-# A ZmqReceiver class will listen on a REP or SUB socket for messages
-# and will invoke a 'HandleIncomingMessage' method to process it.
-# Subclasses should override that. A response must be implemented for
-# REP sockets, but is useless for SUB sockets.
-class ZmqReceiver(object):
+class ZmqReceiver:
+    '''
+    A ZmqReceiver class will listen on a REP or SUB socket for messages
+    and will invoke a 'HandleIncomingMessage' method to process it.
+    Subclasses should override that. A response must be implemented for
+    REP sockets, but is useless for SUB sockets.
+    '''
+
     def __init__(
             self,
             zmq_rep_bind_address=None,

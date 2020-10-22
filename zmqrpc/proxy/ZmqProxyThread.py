@@ -1,8 +1,23 @@
 
 
+'''
+Created on Apr 8, 2014
+Edited on Oct 22, 2020
+
+@author: Jan Verhoeven
+@author: Bassem Girgis
+
+@copyright: MIT license, see http://opensource.org/licenses/MIT
+'''
+
+from threading import Thread
+
+
 class ZmqProxyThread(Thread):
+
     def __init__(self):
-        Thread.__init__(self)
+        super().__init__()
+
         self.proxy = None
 
     def last_received_message(self):

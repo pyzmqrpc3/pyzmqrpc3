@@ -1,3 +1,12 @@
+'''
+Created on Apr 8, 2014
+Edited on Oct 22, 2020
+
+@author: Jan Verhoeven
+@author: Bassem Girgis
+
+@copyright: MIT license, see http://opensource.org/licenses/MIT
+'''
 
 import logging
 import time
@@ -8,7 +17,8 @@ import zmq.auth
 logger = logging.getLogger("zmqrpc")
 
 
-class RepSocket(object):
+class RepSocket:
+
     def __init__(self, ctx, poller, address, auth):
         self.ctx = ctx
         self.poller = poller

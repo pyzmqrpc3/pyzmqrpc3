@@ -1,9 +1,27 @@
 
-# This class implements a simple message forwarding from a PUB/SUB connection to a
-# REQ/REP connection.
+
+'''
+Created on Apr 8, 2014
+Edited on Oct 22, 2020
+
+@author: Jan Verhoeven
+@author: Bassem Girgis
+
+@copyright: MIT license, see http://opensource.org/licenses/MIT
+'''
+
+from ..receiver import ZmqReceiver
+from ..sender import ZmqSender
+
+
 class ZmqProxySub2Req(ZmqReceiver):
+    '''
+    # This class implements a simple message forwarding from a PUB/SUB
+    # connection to a REQ/REP connection.
     # Note, at the moment username/password only protects the REQ-REP socket
     # connection
+    '''
+
     def __init__(
             self,
             zmq_sub_connect_addresses,
@@ -13,16 +31,18 @@ class ZmqProxySub2Req(ZmqReceiver):
             password_sub=None,
             username_req=None,
             password_req=None):
-        ZmqReceiver.__init__(
-            self,
+        super().__init__(
             zmq_sub_connect_addresses=zmq_sub_connect_addresses,
             recreate_sockets_on_timeout_of_sec=recreate_sockets_on_timeout_of_sec,
             username=username_sub,
-            password=password_sub)
+            password=password_sub,
+        )
+
         self.sender = ZmqSender(
             zmq_req_endpoints=zmq_req_connect_addresses,
             username=username_req,
-            password=password_req)
+            password=password_req,
+        )
 
     def handle_incoming_message(self, message):
         # We don't care for the response, since we cannot pass it back via the

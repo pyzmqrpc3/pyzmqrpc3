@@ -16,13 +16,15 @@ import zmq
 logger = logging.getLogger("zmqrpc")
 
 
-# ZmqSender implements a ZeroMQ REQ or PUB socket to send messages out via a
-# send function. The send function is equipped with a timeout and automatic
-# recreation of the underlying REQ socket if no message is received back in the
-# given timeout.
-# The username/password can be used to provide 'simple' protection on the wire
-# (only PLAIN has been implemented, so be aware of sniffers).
 class ZmqSender:
+    '''
+    ZmqSender implements a ZeroMQ REQ or PUB socket to send messages out via a
+    send function. The send function is equipped with a timeout and automatic
+    recreation of the underlying REQ socket if no message is received back in the
+    given timeout.
+    The username/password can be used to provide 'simple' protection on the wire
+    (only PLAIN has been implemented, so be aware of sniffers).
+    '''
 
     def __init__(
             self,
