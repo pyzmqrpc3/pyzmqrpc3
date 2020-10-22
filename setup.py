@@ -35,42 +35,6 @@ name = 'pyamqrpc3'
 
 description = 'A simple ZMQ RPC extension with JSON for message serialization'
 
-long_description = \
-    """
-This Python package adds basic Remote Procedure Call functionalities to ZeroMQ.
-It does not do advanced serializing, but simply uses JSON call and
-response structures.
-
-To Install:
-
-pip install pyzmqrpc3
-
-Usage:
-
-Implement a function on the server that can be invoked:
-
-    def test_method(param1, param2):
-        return param1 + param2
-
-Create a ZeroMQ server:
-
-    server = ZmqRpcServerThread(zmq_rep_bind_address="tcp://*:30000",
-            rpc_functions={"test_method": test_method})
-    server.start()
-
-Create a client that connects to that server endpoint:
-
-    client = ZmqRpcClient(zmq_req_endpoints=["tcp://localhost:30000"])
-
-Have the client invoke the function on the server:
-
-    client.invoke(function_name="test_method",
-            function_parameters={"param1": "Hello", "param2": " world"})
-
-The latest development version and more examples below and are included in
-project repository https://github.com/brgirgis/pyzmqrpc3
-"""
-
 authors = {
     'Bassem': ('Bassem Girgis', 'brgirgis@gmail.com'),
     'Jorgen': ('Jan Verhoeven', 'jan@captive.nl'),
@@ -105,7 +69,6 @@ setup(
     name=name,
     version=version,
     description=description,
-    long_description=long_description,
     author=authors["Bassem"][0],
     author_email=authors["Bassem"][1],
     maintainer=authors["Bassem"][0],
