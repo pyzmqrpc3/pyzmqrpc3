@@ -9,16 +9,14 @@ Edited on Oct 22, 2020
 '''
 
 import json
-import logging
 
 import zmq
 import zmq.auth
 from zmq.auth.thread import ThreadAuthenticator
 
+from ..logger import logger
 from .RepSocket import RepSocket
 from .SubSocket import SubSocket
-
-logger = logging.getLogger("zmqrpc")
 
 
 class ZmqReceiver:

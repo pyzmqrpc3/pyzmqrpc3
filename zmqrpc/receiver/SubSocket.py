@@ -8,13 +8,12 @@ Edited on Oct 22, 2020
 @copyright: MIT license, see http://opensource.org/licenses/MIT
 '''
 
-import logging
 import time
 
 import zmq
 import zmq.auth
 
-logger = logging.getLogger("zmqrpc")
+from ..logger import logger
 
 
 class SubSocket:

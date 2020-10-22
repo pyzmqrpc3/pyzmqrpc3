@@ -8,12 +8,11 @@ Edited on Oct 22, 2020
 @copyright: MIT license, see http://opensource.org/licenses/MIT
 '''
 import json
-import logging
 import time
 
 import zmq
 
-logger = logging.getLogger("zmqrpc")
+from ..logger import logger
 
 
 class ZmqSender:

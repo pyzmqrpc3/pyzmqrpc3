@@ -9,11 +9,8 @@ Edited on Oct 22, 2020
 '''
 
 import json
-import logging
 
 from ..sender import ZmqSender
-
-logger = logging.getLogger("zmqrpc")
 
 
 class ZmqRpcClient(ZmqSender):

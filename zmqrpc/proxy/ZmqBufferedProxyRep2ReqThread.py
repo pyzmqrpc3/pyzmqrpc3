@@ -8,13 +8,9 @@ Edited on Oct 22, 2020
 @copyright: MIT license, see http://opensource.org/licenses/MIT
 '''
 
-import logging
-
 from .ZmqProxyRep2PubThread import ZmqProxyRep2PubThread
 from .ZmqProxySub2ReqThread import ZmqProxySub2ReqThread
 from .ZmqProxyThread import ZmqProxyThread
-
-logger = logging.getLogger("zmqrpc")
 
 
 class ZmqBufferedProxyRep2ReqThread(ZmqProxyThread):
