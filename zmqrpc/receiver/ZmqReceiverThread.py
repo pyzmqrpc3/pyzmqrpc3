@@ -22,7 +22,7 @@ class ZmqReceiverThread(Thread):
             self,
             zmq_rep_bind_address=None,
             zmq_sub_connect_addresses=None,
-            recreate_sockets_on_timeout_of_sec=60,
+            recreate_timeout=60,
             username=None,
             password=None):
         super().__init__()
@@ -30,7 +30,7 @@ class ZmqReceiverThread(Thread):
         self.__receiver = ZmqReceiver(
             zmq_rep_bind_address=zmq_rep_bind_address,
             zmq_sub_connect_addresses=zmq_sub_connect_addresses,
-            recreate_sockets_on_timeout_of_sec=recreate_sockets_on_timeout_of_sec,
+            recreate_timeout=recreate_timeout,
             username=username,
             password=password,
         )

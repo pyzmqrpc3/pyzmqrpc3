@@ -27,14 +27,14 @@ class ZmqProxyRep2Req(ZmqReceiver):
             self,
             zmq_rep_bind_address,
             zmq_req_connect_addresses,
-            recreate_sockets_on_timeout_of_sec=600,
+            recreate_timeout=600,
             username_rep=None,
             password_rep=None,
             username_req=None,
             password_req=None):
         super().__init__(
             zmq_rep_bind_address=zmq_rep_bind_address,
-            recreate_sockets_on_timeout_of_sec=recreate_sockets_on_timeout_of_sec,
+            recreate_timeout=recreate_timeout,
             username=username_rep,
             password=password_rep,
         )

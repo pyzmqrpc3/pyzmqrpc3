@@ -12,9 +12,9 @@ Edited on Oct 22, 2020
 
 
 import json
+from typing import Optional
 
 import zmq
-import zmq.auth
 from zmq.auth.thread import ThreadAuthenticator
 
 from ..logger import logger
@@ -34,7 +34,7 @@ class ZmqReceiver:
             self,
             zmq_rep_bind_address=None,
             zmq_sub_connect_addresses=None,
-            recreate_sockets_on_timeout_of_sec=600,
+            recreate_timeout=600,
             username=None,
             password=None):
         self.context = zmq.Context()
@@ -47,6 +47,7 @@ class ZmqReceiver:
         self.poller = zmq.Poller()
         self.sub_sockets = []
         self.rep_socket = None
+
         if username is not None and password is not None:
             # Start an authenticator for this context.
             # Does not work on PUB/SUB as far as I (probably because the
@@ -55,7 +56,11 @@ class ZmqReceiver:
             self.auth.start()
             # Instruct authenticator to handle PLAIN requests
             self.auth.configure_plain(
-                domain='*', passwords={username: password})
+                domain='*',
+                passwords={
+                    username: password,
+                }
+            )
 
         if self.zmq_sub_connect_addresses:
             for address in self.zmq_sub_connect_addresses:
@@ -64,23 +69,26 @@ class ZmqReceiver:
                         self.context,
                         self.poller,
                         address,
-                        recreate_sockets_on_timeout_of_sec))
+                        recreate_timeout,
+                    )
+                )
         if zmq_rep_bind_address:
             self.rep_socket = RepSocket(
                 self.context,
                 self.poller,
                 zmq_rep_bind_address,
-                self.auth)
+                self.auth,
+            )
 
     # May take up to 60 seconds to actually stop since poller has timeout of
     # 60 seconds
-    def stop(self):
+    def stop(self) -> None:
         self.is_running = False
         logger.info("Closing pub and sub sockets...")
         if self.auth is not None:
             self.auth.stop()
 
-    def run(self):
+    def run(self) -> None:
         self.is_running = True
 
         while self.is_running:
@@ -110,22 +118,30 @@ class ZmqReceiver:
 
         if self.rep_socket:
             self.rep_socket.destroy()
+
         for sub_socket in self.sub_sockets:
             sub_socket.destroy()
 
     def create_response_message(
             self,
-            status_code,
-            status_message,
-            response_message):
-        if response_message is not None:
-            return json.dumps({"status_code": status_code,
-                               "status_message": status_message,
-                               "response_message": response_message})
-        else:
-            return json.dumps({"status_code": status_code,
-                               "status_message": status_message})
+            status_code: int,
+            status_message: str,
+            response_message: Optional[str] = None) -> str:
+        payload = {
+            'status_code': status_code,
+            'status_message': status_message,
+        }
 
-    def handle_incoming_message(self, message):
-        if message != "zmq_sub_heartbeat":
-            return self.create_response_message(200, "OK", None)
+        if response_message is not None:
+            payload['response_message'] = response_message
+
+        return json.dumps(payload)
+
+    def handle_incoming_message(self, message: str) -> Optional[str]:
+        if message == 'zmq_sub_heartbeat':
+            return None
+
+        return self.create_response_message(
+            status_code=200,
+            status_message='OK',
+        )

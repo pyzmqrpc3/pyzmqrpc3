@@ -28,7 +28,7 @@ class ZmqBufferedProxyRep2ReqThread(ZmqProxyThread):
             zmq_req_connect_addresses=None,
             buffered_pub_address="tcp://*:59878",
             buffered_sub_address="tcp://localhost:59878",
-            recreate_sockets_on_timeout_of_sec=600,
+            recreate_timeout=600,
             username_rep=None,
             password_rep=None,
             username_req=None,
@@ -38,7 +38,7 @@ class ZmqBufferedProxyRep2ReqThread(ZmqProxyThread):
         self.proxy1 = ZmqProxyRep2PubThread(
             zmq_rep_bind_address=zmq_rep_bind_address,
             zmq_pub_bind_address=buffered_pub_address,
-            recreate_sockets_on_timeout_of_sec=100000,
+            recreate_timeout=100000,
             username_rep=username_rep,
             password_rep=password_rep,
         )
@@ -46,7 +46,7 @@ class ZmqBufferedProxyRep2ReqThread(ZmqProxyThread):
         self.proxy2 = ZmqProxySub2ReqThread(
             zmq_sub_connect_addresses=[buffered_sub_address],
             zmq_req_connect_addresses=zmq_req_connect_addresses,
-            recreate_sockets_on_timeout_of_sec=recreate_sockets_on_timeout_of_sec,
+            recreate_timeout=recreate_timeout,
             username_req=username_req,
             password_req=password_req,
         )

@@ -21,7 +21,7 @@ from ..logger import logger
 
 class RepSocket:
 
-    def __init__(self, ctx, poller, address, auth):
+    def __init__(self, ctx: zmq.context, poller: zmq.Poller, address, auth):
         self.ctx = ctx
         self.poller = poller
         self.address = address

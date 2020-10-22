@@ -27,7 +27,7 @@ class ZmqRpcServerThread(Thread):
             zmq_rep_bind_address=None,
             zmq_sub_connect_addresses=None,
             rpc_functions=None,
-            recreate_sockets_on_timeout_of_sec=60,
+            recreate_timeout=60,
             username=None,
             password=None):
         super().__init__()
@@ -36,7 +36,7 @@ class ZmqRpcServerThread(Thread):
             zmq_rep_bind_address=zmq_rep_bind_address,
             zmq_sub_connect_addresses=zmq_sub_connect_addresses,
             rpc_functions=rpc_functions,
-            recreate_sockets_on_timeout_of_sec=recreate_sockets_on_timeout_of_sec,
+            recreate_timeout=recreate_timeout,
             username=username,
             password=password,
         )

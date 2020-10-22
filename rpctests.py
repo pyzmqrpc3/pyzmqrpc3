@@ -307,7 +307,7 @@ class TestZmqPackage(unittest.TestCase):
         sender = ZmqSender(zmq_pub_endpoint="tcp://*:47001")
         receiver_thread = ZmqReceiverThread(
             zmq_sub_connect_addresses=["tcp://localhost:47001"],
-            recreate_sockets_on_timeout_of_sec=3)
+            recreate_timeout=3)
         receiver_thread.start()
         # Slow joiner
         time.sleep(0.1)
@@ -359,7 +359,7 @@ class TestZmqPackage(unittest.TestCase):
         sender = ZmqSender(zmq_pub_endpoint="tcp://*:47001")
         receiver_thread = ZmqReceiverThread(
             zmq_sub_connect_addresses=[
-                ("tcp://localhost:47001", 3)], recreate_sockets_on_timeout_of_sec=10)
+                ("tcp://localhost:47001", 3)], recreate_timeout=10)
         receiver_thread.start()
         # Slow joiner
         time.sleep(0.1)
@@ -423,7 +423,7 @@ class TestZmqPackage(unittest.TestCase):
                  3)],
             rpc_functions={
                 "invoke_test": invoke_test},
-            recreate_sockets_on_timeout_of_sec=10)
+            recreate_timeout=10)
         server_thread.start()
         # Slow joiner
         time.sleep(0.1)

@@ -20,7 +20,7 @@ class ZmqProxySub2ReqThread(ZmqProxyThread):
             self,
             zmq_sub_connect_addresses=None,
             zmq_req_connect_addresses=None,
-            recreate_sockets_on_timeout_of_sec=600,
+            recreate_timeout=600,
             username_sub=None,
             password_sub=None,
             username_req=None,
@@ -30,7 +30,7 @@ class ZmqProxySub2ReqThread(ZmqProxyThread):
         self.proxy = ZmqProxySub2Req(
             zmq_sub_connect_addresses=zmq_sub_connect_addresses,
             zmq_req_connect_addresses=zmq_req_connect_addresses,
-            recreate_sockets_on_timeout_of_sec=recreate_sockets_on_timeout_of_sec,
+            recreate_timeout=recreate_timeout,
             username_sub=username_sub,
             password_sub=password_sub,
             username_req=username_req,

@@ -21,7 +21,7 @@ class ZmqProxyRep2PubThread(ZmqProxyThread):
             self,
             zmq_rep_bind_address=None,
             zmq_pub_bind_address=None,
-            recreate_sockets_on_timeout_of_sec=600,
+            recreate_timeout=600,
             username_rep=None,
             password_rep=None,
             username_pub=None,
@@ -31,7 +31,7 @@ class ZmqProxyRep2PubThread(ZmqProxyThread):
         self.proxy = ZmqProxyRep2Pub(
             zmq_rep_bind_address=zmq_rep_bind_address,
             zmq_pub_bind_address=zmq_pub_bind_address,
-            recreate_sockets_on_timeout_of_sec=recreate_sockets_on_timeout_of_sec,
+            recreate_timeout=recreate_timeout,
             username_rep=username_rep,
             password_rep=password_rep,
             username_pub=username_pub,

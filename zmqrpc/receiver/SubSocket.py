@@ -21,7 +21,12 @@ from ..logger import logger
 
 class SubSocket:
 
-    def __init__(self, ctx, poller, address, timeout_in_sec=None):
+    def __init__(
+            self,
+            ctx: zmq.Context,
+            poller: zmq.Poller,
+            address,
+            timeout_in_sec=None):
         self.ctx = ctx
         self.poller = poller
         self.address = address
@@ -69,7 +74,7 @@ class SubSocket:
         if (self.timeout_in_sec is not None) and time.time(
         ) > self.last_received_bytes + self.timeout_in_sec:
             # Recreate sockets
-            logger.warn(
+            logger.warning(
                 "Heartbeat timeout exceeded. Recreating SUB socket to %s",
                 self.address)
             self.destroy()
