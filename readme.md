@@ -1,3 +1,5 @@
+![Upload Python Package](https://github.com/brgirgis/pyzmqrpc3/workflows/Upload%20Python%20Package/badge.svg?event=deployment_status)
+
 # pyzmqrpc3
 
 ## Introduction
