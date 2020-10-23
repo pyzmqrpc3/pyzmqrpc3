@@ -15,7 +15,7 @@ import logging
 import signal
 import sys
 
-from zmqrpc.ZmqProxy import (
+from zmqrpc import (
     ZmqProxyRep2Pub,
     ZmqProxyRep2Req,
     ZmqProxySub2Pub,
@@ -86,7 +86,6 @@ if __name__ == '__main__':
                 password_sub=args.password_incoming,
                 username_req=args.username_outgoing,
                 password_req=args.password_outgoing)
-            server.run()
         elif args.rep is not None and args.pub is not None:
             server = ZmqProxyRep2Pub(
                 zmq_rep_bind_address=args.rep,
@@ -95,7 +94,6 @@ if __name__ == '__main__':
                 password_rep=args.password_incoming,
                 username_pub=args.username_outgoing,
                 password_pub=args.password_outgoing)
-            server.run()
         elif args.sub is not None and args.pub is not None:
             server = ZmqProxySub2Pub(
                 zmq_sub_connect_addresses=args.sub,
@@ -104,7 +102,6 @@ if __name__ == '__main__':
                 password_sub=args.password_incoming,
                 username_pub=args.username_outgoing,
                 password_pub=args.password_outgoing)
-            server.run()
         elif args.rep is not None and args.req is not None:
             server = ZmqProxyRep2Req(
                 zmq_rep_bind_address=args.rep,
@@ -113,5 +110,6 @@ if __name__ == '__main__':
                 password_rep=args.password_incoming,
                 username_req=args.username_outgoing,
                 password_req=args.password_outgoing)
-            server.run()
+
+        server.run()
     logger.info("Stopped zmqproxy...")
