@@ -75,10 +75,10 @@ classifiers = [
     # Indicate who your project is intended for
     'Intended Audience :: Developers',
 
-    'Topic :: Internet :: WWW/HTTP :: Site Management',
-    'Topic :: Software Development :: Libraries :: Python Modules',
+    'Topic :: Communications',
+    'Topic :: Internet',
 
-    'License :: OSI Approved :: MIT License (MIT)',
+    'License :: OSI Approved :: MIT License',
 
     'Programming Language :: Python :: 3.6',
     'Programming Language :: Python :: 3.7',
