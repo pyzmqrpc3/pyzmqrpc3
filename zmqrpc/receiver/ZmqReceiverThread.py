@@ -14,6 +14,7 @@ Edited on Oct 22, 2020
 from threading import Thread
 from typing import Optional, Tuple
 
+from .SubSocket import SubSocket
 from .ZmqReceiver import ZmqReceiver
 
 
@@ -44,3 +45,6 @@ class ZmqReceiverThread(Thread):
 
     def get_last_received_message(self) -> Optional[str]:
         return self.__receiver.get_last_received_message()
+
+    def get_sub_socket(self, idx: int) -> SubSocket:
+        return self.__receiver.get_sub_socket(idx=idx)

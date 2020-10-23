@@ -34,7 +34,7 @@ class SubSocket:
         self.__poller = poller
         self.__address: str = None
         self.__timeout_in_sec: Optional[int] = timeout_in_sec
-        self.__zmq_socket = None
+        self.__zmq_socket: Optional[zmq.Socket] = None
         self.__last_received_time = None
 
         if isinstance(address, str):
@@ -46,8 +46,16 @@ class SubSocket:
 
         self.create()
 
+    @property
+    def has_zmq_socket(self) -> bool:
+        return self.__zmq_socket is not None
+
+    @property
+    def zmq_socket(self) -> Optional[zmq.Socket]:
+        return self.__zmq_socket
+
     def create(self) -> None:
-        if self.__zmq_socket is not None:
+        if self.has_zmq_socket:
             return
 
         self.__zmq_socket = zmq_socket = self.__ctx.socket(zmq.SUB)
@@ -62,10 +70,12 @@ class SubSocket:
         logger.debug("Created SUB socket to %s", self.__address)
 
     def destroy(self) -> None:
-        if self.__zmq_socket is None:
+        if not self.has_zmq_socket:
             return
 
-        self.__poller.unregister(self.__zmq_socket)
+        zmq_socket = self.zmq_socket
+
+        self.__poller.unregister(zmq_socket)
 
         address = self.__address
         if isinstance(address, tuple):
@@ -75,10 +85,10 @@ class SubSocket:
         if '*' in address:
             address = address.replace('*', '0.0.0.0')
 
-        self.__zmq_socket.disconnect(address)
-        self.__zmq_socket.close()
+        zmq_socket.disconnect(address)
+        zmq_socket.close()
 
-        while not self.__zmq_socket.closed:
+        while not zmq_socket.closed:
             time.sleep(1)
 
         self.__zmq_socket = None
@@ -86,9 +96,8 @@ class SubSocket:
         logger.debug("Destroyed SUB socket bound to %s", self.__address)
 
     def recv_string(self, socks: dict) -> Optional[str]:
-        if self.__zmq_socket is not None and (
-                socks.get(self.__zmq_socket) == zmq.POLLIN):
-            result = self.__zmq_socket.recv_string()
+        if self.has_zmq_socket and (socks.get(self.zmq_socket) == zmq.POLLIN):
+            result = self.zmq_socket.recv_string()
             self.__last_received_time = time.time()
             return result
 

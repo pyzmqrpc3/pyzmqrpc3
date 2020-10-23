@@ -160,3 +160,6 @@ class ZmqReceiver:
 
     def get_last_received_message(self) -> Optional[str]:
         return self.__last_received_message
+
+    def get_sub_socket(self, idx: int) -> SubSocket:
+        return self.__sub_sockets[idx]

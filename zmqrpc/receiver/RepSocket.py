@@ -24,7 +24,7 @@ class RepSocket:
 
     def __init__(
             self,
-            ctx: zmq.context,
+            ctx: zmq.Context,
             poller: zmq.Poller,
             address: str,
             auth: Optional[ThreadAuthenticator]):
