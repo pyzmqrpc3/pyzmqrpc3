@@ -84,6 +84,7 @@
     "Girgis",
     "Verhoeven",
     "inproc",
+    "nargs",
     "pyamqrpc",
     "pyreadline3",
     "pytest",
@@ -91,6 +92,8 @@
     "pyzmqrpc",
     "unregister",
     "zeromq",
-    "zmqrpc"
+    "zmqproxy",
+    "zmqrpc",
+    "zmqsnoop"
   ],
 }
