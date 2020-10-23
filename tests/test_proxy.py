@@ -26,7 +26,7 @@ from zmqrpc import (
 )
 
 
-def test_rpc1_req_rep_with_rep_req_proxy_without_password(
+def notest_rpc1_req_rep_with_rep_req_proxy_without_password(
         logger,
         close_socket_delay,
         two_sec_delay,
@@ -79,7 +79,7 @@ def test_rpc1_req_rep_with_rep_req_proxy_without_password(
     assert call_state.last_invoked_param1 == 'value1'
 
 
-def test_rpc1_req_rep_with_rep_req_proxy(
+def notest_rpc1_req_rep_with_rep_req_proxy(
         logger,
         close_socket_delay,
         call_state,
