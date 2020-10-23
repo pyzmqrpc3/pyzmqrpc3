@@ -65,7 +65,11 @@ def test_req_rep_sockets(logger, close_socket_delay):
     close_socket_delay()
 
 
-def notest_req_rep_sockets_over_inproc(logger, close_socket_delay):
+def test_req_rep_sockets_over_inproc(is_windows, logger, close_socket_delay):
+    if is_windows:
+        logger.info('skipping unsupported transport')
+        return
+
     # Basic send/receive over REQ/REP sockets
     logger.info(
         'Test if sending works over REQ/REP socket using inproc, '
@@ -150,11 +154,16 @@ def test_pub_sub_without_passwords(
     close_socket_delay()
 
 
-def notest_pub_sub_without_passwords_over_inproc(
+def test_pub_sub_without_passwords_over_inproc(
+        is_windows,
         logger,
         close_socket_delay,
         slow_joiner_delay,
         two_sec_delay):
+    if is_windows:
+        logger.info('skipping unsupported transport')
+        return
+
     # Basic send/receive over PUB/SUB sockets
     logger.info('Test if sending works over PUB/SUB sockets without passwords')
 

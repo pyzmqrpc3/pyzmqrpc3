@@ -10,6 +10,11 @@ from .State import State
 
 
 @pytest.fixture(scope='package')
+def is_windows():
+    return sys.platform == 'win32'
+
+
+@pytest.fixture(scope='package')
 def logger():
     root = logging.getLogger()
     root.setLevel(logging.DEBUG)
