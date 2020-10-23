@@ -9,7 +9,6 @@ _dir = os.path.dirname(__file__)
 
 _init_path = os.path.join(_dir, 'zmqrpc', '__init__.py')
 _req_path = os.path.join(_dir, 'requirements.txt')
-_readme_path = os.path.join(_dir, 'README.md')
 
 
 def _get_version() -> str:
@@ -32,15 +31,20 @@ def _get_requirements() -> List[str]:
     ]
 
 
-def _get_long_description() -> str:
-    return open(_readme_path, 'r').read()
-
-
 name = 'pyzmqrpc3'
 
 description = 'A simple ZMQ RPC extension with JSON for message serialization'
 
-long_description = _get_long_description()
+long_description = '''
+
+This Python package adds basic Remote Procedure Call (RPC) functionalities to
+ZeroMQ.
+It does not do advanced serializing, but simply uses JSON call and
+response structures.
+
+For more info visit the project repository at
+https://github.com/brgirgis/pyzmqrpc3
+'''
 
 authors = {
     'Bassem': ('Bassem Girgis', 'brgirgis@gmail.com'),
