@@ -13,6 +13,7 @@ Edited on Oct 22, 2020
 
 from threading import Thread
 
+from ..receiver import SubSocket
 from .ZmqRpcServer import ZmqRpcServer
 
 
@@ -49,3 +50,6 @@ class ZmqRpcServerThread(Thread):
 
     def stop(self) -> None:
         self.__server.stop()
+
+    def get_sub_socket(self, idx: int) -> SubSocket:
+        return self.__server.get_sub_socket(idx=idx)

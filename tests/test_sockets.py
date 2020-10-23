@@ -191,12 +191,12 @@ def test_pub_sub_timeout(
         slow_joiner_delay,
         two_sec_delay):
     # Basic send/receive over PUB/SUB sockets
-    logger.info("Test a timeout")
+    logger.info('Test a timeout')
 
-    sender = ZmqSender(zmq_pub_endpoint="tcp://*:47001")
+    sender = ZmqSender(zmq_pub_endpoint='tcp://*:47001')
 
     receiver_thread = ZmqReceiverThread(
-        zmq_sub_connect_addresses=["tcp://localhost:47001"],
+        zmq_sub_connect_addresses=['tcp://localhost:47001'],
         recreate_timeout=3,
     )
     receiver_thread.start()
@@ -205,7 +205,7 @@ def test_pub_sub_timeout(
     slow_joiner_delay()
 
     first_socket = receiver_thread.get_sub_socket(idx=0).zmq_socket
-    sender.send("test")
+    sender.send('test')
 
     # Take 2 seconds to see if it works in case of within the 3 seconds
     # window.
@@ -214,7 +214,7 @@ def test_pub_sub_timeout(
     assert receiver_thread.get_last_received_message() == 'test'
 
     # Now send another but with 2 seconds delay, which should be ok
-    sender.send("test2")
+    sender.send('test2')
     two_sec_delay()
 
     assert receiver_thread.get_last_received_message() == 'test2'
@@ -222,7 +222,7 @@ def test_pub_sub_timeout(
 
     # Now send another but with 4 seconds delay, which should restart the
     # sockets, but message should arrive
-    sender.send("test3")
+    sender.send('test3')
     two_sec_delay()
     two_sec_delay()
 
@@ -231,7 +231,7 @@ def test_pub_sub_timeout(
     assert second_socket != first_socket
 
     # Now send another but with 2 seconds delay, which should be ok
-    sender.send("test4")
+    sender.send('test4')
     two_sec_delay()
 
     assert receiver_thread.get_last_received_message() == 'test4'
@@ -251,13 +251,13 @@ def test_pub_sub_timeout_per_socket(
         slow_joiner_delay,
         two_sec_delay):
     # Basic send/receive over PUB/SUB sockets
-    logger.info("Test a timeout per socket")
+    logger.info('Test a timeout per socket')
 
-    sender = ZmqSender(zmq_pub_endpoint="tcp://*:47001")
+    sender = ZmqSender(zmq_pub_endpoint='tcp://*:47001')
 
     receiver_thread = ZmqReceiverThread(
         zmq_sub_connect_addresses=[
-            ("tcp://localhost:47001", 3),
+            ('tcp://localhost:47001', 3),
         ],
         recreate_timeout=10,
     )
@@ -267,7 +267,7 @@ def test_pub_sub_timeout_per_socket(
     slow_joiner_delay()
 
     first_socket = receiver_thread.get_sub_socket(idx=0).zmq_socket
-    sender.send("test")
+    sender.send('test')
     # Take 2 seconds to see if it works in case of within the 3 seconds
     # window.
     two_sec_delay()
@@ -276,7 +276,7 @@ def test_pub_sub_timeout_per_socket(
 
     # Now send another but with 2 seconds delay, which should be ok,
     # followed by 4 heartbeats. Socket should not be refreshed.
-    sender.send("test2")
+    sender.send('test2')
     two_sec_delay()
 
     sender.send_heartbeat()
@@ -295,7 +295,7 @@ def test_pub_sub_timeout_per_socket(
 
     # Now send another but with 4 seconds delay, which should restart the
     # sockets, but message should arrive
-    sender.send("test3")
+    sender.send('test3')
     two_sec_delay()
     two_sec_delay()
 
@@ -304,7 +304,7 @@ def test_pub_sub_timeout_per_socket(
     assert second_socket != first_socket
 
     # Now send another but with 2 seconds delay, which should be ok
-    sender.send("test4")
+    sender.send('test4')
     two_sec_delay()
 
     assert receiver_thread.get_last_received_message() == 'test4'

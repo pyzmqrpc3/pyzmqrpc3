@@ -6,6 +6,8 @@ from time import sleep
 
 import pytest
 
+from .State import State
+
 
 @pytest.fixture(scope='package')
 def logger():
@@ -40,3 +42,26 @@ def slow_joiner_delay():
 @pytest.fixture(scope='package')
 def two_sec_delay():
     return partial(sleep, 2)
+
+
+@pytest.fixture(scope='function')
+def call_state():
+    return State()
+
+
+@pytest.fixture(scope='function')
+def invoke_callback():
+    def _invoke_test(state: State, param1, param2):
+        state.last_invoked_param1 = param1
+        return '{0}:{1}'.format(param1, param2)
+    return _invoke_test
+
+
+@pytest.fixture(scope='function')
+def invoke_callback_exception():
+    def _invoke_test(state: State, param1, param2):
+        del param1  # Unused
+        del param2  # Unused
+        state.last_invoked_param1 = 'Exception Raised'
+        raise Exception('Something went wrong')
+    return _invoke_test
