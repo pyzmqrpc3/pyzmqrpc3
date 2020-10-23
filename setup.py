@@ -9,6 +9,7 @@ _dir = os.path.dirname(__file__)
 
 _init_path = os.path.join(_dir, 'zmqrpc', '__init__.py')
 _req_path = os.path.join(_dir, 'requirements.txt')
+_readme_path = os.path.join(_dir, 'README.md')
 
 
 def _get_version() -> str:
@@ -31,9 +32,15 @@ def _get_requirements() -> List[str]:
     ]
 
 
-name = 'pyamqrpc3'
+def _get_long_description() -> str:
+    return open(_readme_path, 'r').read()
+
+
+name = 'pyzmqrpc3'
 
 description = 'A simple ZMQ RPC extension with JSON for message serialization'
+
+long_description = _get_long_description()
 
 authors = {
     'Bassem': ('Bassem Girgis', 'brgirgis@gmail.com'),
@@ -59,6 +66,8 @@ license_name = 'MIT'
 packages = [
     'zmqrpc',
     'zmqrpc.client',
+    'zmqrpc.heartbeat',
+    'zmqrpc.logger',
     'zmqrpc.proxy',
     'zmqrpc.receiver',
     'zmqrpc.sender',
@@ -90,6 +99,7 @@ setup(
     name=name,
     version=version,
     description=description,
+    long_description=long_description,
     author=authors["Bassem"][0],
     author_email=authors["Bassem"][1],
     maintainer=authors["Bassem"][0],
