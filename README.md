@@ -6,13 +6,14 @@
 
 ## Introduction
 
-This Python package adds basic Remote Procedure Call functionalities to ZeroMQ.
+This Python package adds basic Remote Procedure Call (RPC) functionalities to
+ZeroMQ.
 It does not do advanced serializing, but simply uses JSON call and
 response structures.
 
 ## Install
 
-pip install pyzmqrpc3
+    pip install pyzmqrpc3
 
 ## Usage
 
@@ -24,25 +25,30 @@ Implement a function on the server that can be invoked:
 Create a ZeroMQ server:
 
     server = ZmqRpcServerThread(
-            zmq_rep_bind_address="tcp://*:30000",
-            rpc_functions={"test_method": test_method},
-        )
+        zmq_rep_bind_address='tcp://*:30000',
+        rpc_functions={
+            'test_method': test_method,
+        },
+    )
     server.start()
 
 Create a client that connects to that server endpoint:
 
     client = ZmqRpcClient(
-        zmq_req_endpoints=["tcp://localhost:30000"],
+        zmq_req_endpoints=['tcp://localhost:30000'],
     )
 
 Have the client invoke the function on the server:
 
     client.invoke(
-        function_name="test_method",
-        function_parameters={"param1": "Hello", "param2": " world"},
+        function_name='test_method',
+        function_parameters={
+            "param1": "Hello",
+            "param2": " world",
+        },
     )
 
-More examples below and are included in the repository.
+For more example, see below and are included in the repository.
 A unit test is also included.
 
 ## Rationale
@@ -113,108 +119,6 @@ Implements a method that can be remotely invoked.
 Uses ZmqReceiver functionality to listen for messages on a REP or SUB
 socket, deserialize the message and invoke them.
 
-## Example
-
-This example is from demo_pub_sub.py. It should be relatively
-self explanatory.
-It starts an RPC server thread, registers a function, then creates an RPC
-client and invokes the registered function.
-
-    from zmqrpc.ZmqRpcClient import ZmqRpcClient
-    from zmqrpc.ZmqRpcServer import ZmqRpcServerThread
-    import time
-    
-    
-    def test_method(param1, param2):
-        print "test_method invoked with params '{0}' and '{1}'".format(param1, param2)
-    
-    if __name__ == '__main__':
-        client = ZmqRpcClient(
-            zmq_pub_endpoint="tcp://*:30000",
-            username="test",
-            password="test")
-    
-        server = ZmqRpcServerThread(
-            zmq_sub_connect_addresses=["tcp://localhost:30000"],    # Must be a list
-            rpc_functions={"test_method": test_method},             # Dict
-            username="test",
-            password="test")
-    
-        server.start()
-    
-        # Wait a bit since sockets may not have been connected immediately
-        time.sleep(2)
-    
-        client.invoke(
-            function_name="test_method",
-            function_parameters={"param1": "param1", "param2": "param2"})   # Must be dict
-    
-        # Wait a bit to make sure message has been received
-        time.sleep(2)
-    
-        # Clean up
-        server.stop()
-        server.join()
-
-Example with invoking method in REP/REQ.
-The difference with PUB/SUB is that this will return a response message:
-
-    from zmqrpc.ZmqRpcClient import ZmqRpcClient
-    from zmqrpc.ZmqRpcServer import ZmqRpcServerThread
-    import time
-    
-    
-    def test_method(param1, param2):
-        print "test_method invoked with params '{0}' and '{1}'".format(param1, param2)
-        return "test_method response text"
-    
-    if __name__ == '__main__':
-        client = ZmqRpcClient(
-            zmq_req_endpoints=["tcp://localhost:30000"],            # List
-            username="test",
-            password="test")
-    
-        server = ZmqRpcServerThread(
-            zmq_rep_bind_address="tcp://*:30000",
-            rpc_functions={"test_method": test_method},             # Dict
-            username="test",
-            password="test")
-        server.start()
-    
-        # Wait a bit since sockets may not have been connected immediately
-        time.sleep(2)
-    
-        # REQ/REQ sockets can carry a response
-        response = client.invoke(
-            function_name="test_method",
-            function_parameters={"param1": "param1", "param2": "param2"})   # Must be dict
-    
-        print "response: {0}".format(response)
-    
-        # Wait a bit to make sure message has been received
-        time.sleep(2)
-    
-        # Clean up
-        server.stop()
-        server.join()
-
-### New since 1.5.0 - Per socket heartbeats
-
-In order to detect silently disconnected SUB sockets
-(network failures or otherwise), it is now possible to (optionally) define a
-heartbeat timeout per SUB socket.
-Updated example:
-
-        server = ZmqRpcServerThread(
-            zmq_sub_connect_addresses=[("tcp://localhost:30000", 60)],
-            rpc_functions={"test_method": test_method},
-            username="test",
-            password="test")
-
-Per SUB socket address a tuple can be specified that holds the address as
-the first element and the heartbeat timeout as the second.
-Note that that the responsibility to send an heartbeat 
-
 ## Available standard proxies
 
 A number of already provided proxies are available:
@@ -247,39 +151,3 @@ over remote connections
 
 Please note that this implementation is very pre-mature, although it works
 fine for me in my own project and has operated stable for months.
-
-## Change log
-
-### Version 2.0.0
-
-* Python 3 compatibility added.
-* Added to Travis CI
-
-### Version 1.5.1
-
-* Fixed heartbeat reception in ZmqRpcServer.
-
-### Version 1.5.0
-
-* Improved ability to use heartbeats to avoid silently failing ZMQ sockets.
-Timeouts can now be set per SUB socket.
-Before this version a reset would be for all addresses in the SUB address
-list provided.
-This would allow a single socket to get disconnected and never
-reconnected because the other SUB sockets were still getting messages.
-* Replace * with 0.0.0.0 in socket.unbind, which seems no longer supported.
-
-### Version 1.0.1
-
-Central logging for entire zmqrpc facility. Also logs exceptions for easier
-debugging.
-
-### Version 1.0.0
-
-Added a buffered REQ/REQ proxy which uses PUB/SUB internally.
-Bumped version number to stable release number since the library worked
-fine for months and code and tests are now at a more mature level.
-
-### Version 0.1.9 and before
-
-Internal testing.
