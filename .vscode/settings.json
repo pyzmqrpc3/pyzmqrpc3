@@ -79,8 +79,10 @@
   "cSpell.words": [
     "Girgis",
     "Verhoeven",
+    "inproc",
     "pyamqrpc",
     "pyreadline3",
+    "pytest",
     "pyzmq",
     "pyzmqrpc",
     "unregister",

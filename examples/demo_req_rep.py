@@ -25,17 +25,21 @@ def test_method(param1, param2) -> str:
             param2,
         )
     )
-    return 'test_method response text'
+    return 'test_method response text for argument %s' % str(
+        dict(param1=param1, param2=param2)
+    )
 
 
 def main(args: Optional[Tuple[str]] = None) -> int:
 
+    print('starting client ...')
     client = ZmqRpcClient(
         zmq_req_endpoints=['tcp://localhost:30000'],            # List
         username='test',
         password='test',
     )
 
+    print('starting server ...')
     server = ZmqRpcServerThread(
         zmq_rep_bind_address='tcp://*:30000',
         rpc_functions={             # Dict
@@ -53,8 +57,8 @@ def main(args: Optional[Tuple[str]] = None) -> int:
     response = client.invoke(
         function_name='test_method',
         function_parameters={  # Must be dict
-            'param1': 'param1',
-            'param2': 'param2',
+            'param1': 'passed param1',
+            'param2': 'passed param2',
         },
     )
 
