@@ -199,7 +199,7 @@ class ZmqSender:
                     "Mark PUB socket for renewal. Consider this message "
                     "lost.") from e
 
-    def handle_response(self, response_message_json) -> None:
+    def handle_response(self, response_message_json) -> Optional[str]:
         try:
             response_message_dict = json.loads(response_message_json)
         except BaseException as e:
@@ -226,7 +226,7 @@ class ZmqSender:
     def _send_over_req_socket(
             self,
             message: str,
-            time_out_in_sec: int = 10) -> None:
+            time_out_in_sec: int = 10) -> Optional[str]:
         if self.req_socket is None:
             return
 
@@ -271,7 +271,7 @@ class ZmqSender:
     def send(
             self,
             message: str,
-            time_out_in_sec: int = 60) -> None:
+            time_out_in_sec: int = 60) -> Optional[str]:
         # Create sockets if needed. Raise an exception if any problems are
         # encountered
         if self.recreate_pub_socket:
@@ -288,7 +288,7 @@ class ZmqSender:
         # Any errors in the following lines will throw an error that must be
         # caught
         self._send_over_pub_socket(message)
-        self._send_over_req_socket(
+        return self._send_over_req_socket(
             message,
             time_out_in_sec,
         )

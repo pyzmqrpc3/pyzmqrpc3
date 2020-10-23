@@ -39,8 +39,7 @@ class ZmqRpcClient(ZmqSender):
         except Exception as e:
             raise RuntimeError(
                 "Cannot wrap parameters in json format. "
-                "Exception: {0}".format(e)
-            )
+            ) from e
 
     def invoke(
             self,
