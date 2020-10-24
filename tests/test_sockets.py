@@ -36,6 +36,7 @@ def test_req_rep_sockets(logger, close_socket_delay):
     receiver_thread.start()
 
     sender.send('test', time_out_in_sec=3)
+
     assert receiver_thread.get_last_received_message() == 'test'
 
     logger.info(
@@ -49,10 +50,12 @@ def test_req_rep_sockets(logger, close_socket_delay):
         password='wrongpassword',
     )
 
+    is_success = True
     try:
         sender.send('test', time_out_in_sec=3)
         logger.info(
             'Error. Did get answer from remote system which was not expected')
+        is_success = False
     except BaseException:
         # Could not send message, which is ok in this case
         logger.info('Success.')
@@ -64,12 +67,10 @@ def test_req_rep_sockets(logger, close_socket_delay):
     # Cleaning up sockets takes some time
     close_socket_delay()
 
+    assert is_success
 
-def test_req_rep_sockets_over_inproc(is_windows, logger, close_socket_delay):
-    if is_windows:
-        logger.info('skipping unsupported transport')
-        return
 
+def test_req_rep_sockets_over_inproc(logger, close_socket_delay):
     # Basic send/receive over REQ/REP sockets
     logger.info(
         'Test if sending works over REQ/REP socket using inproc, '
@@ -104,10 +105,11 @@ def test_req_rep_sockets_over_inproc(is_windows, logger, close_socket_delay):
         password='wrongpassword',
     )
 
+    is_success = True
     try:
-        sender.send('test', time_out_in_sec=3)
         logger.error(
             'Error. Did get answer from remote system which was not expected')
+        is_success = False
     except BaseException:
         # Could not send message, which is ok in this case
         logger.info('Success.')
@@ -118,6 +120,8 @@ def test_req_rep_sockets_over_inproc(is_windows, logger, close_socket_delay):
 
     # Cleaning up sockets takes some time
     close_socket_delay()
+
+    assert is_success
 
 
 def test_pub_sub_without_passwords(
@@ -155,15 +159,10 @@ def test_pub_sub_without_passwords(
 
 
 def test_pub_sub_without_passwords_over_inproc(
-        is_windows,
         logger,
         close_socket_delay,
         slow_joiner_delay,
         two_sec_delay):
-    if is_windows:
-        logger.info('skipping unsupported transport')
-        return
-
     # Basic send/receive over PUB/SUB sockets
     logger.info('Test if sending works over PUB/SUB sockets without passwords')
 
