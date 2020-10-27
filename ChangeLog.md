@@ -1,6 +1,15 @@
 
 # Change log
 
+## Version 3.1.0
+
+Beta version release:
+
+* Continue code refactor and cleanups
+* Get all using tests working reliably
+* Identify Known Issues and Limitations (KIL)
+* Update README to reflect generic audience
+
 ## Version 3.0.0
 
 Fork from pyzmqrpc and initial release:
