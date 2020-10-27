@@ -1,8 +1,8 @@
 
 
 '''
-Created on Apr 8, 2014
-Edited on Oct 22, 2020
+Created on Apr 2014
+Edited on Oct 2020
 
 @author: Jan Verhoeven
 @author: Bassem Girgis
@@ -55,7 +55,7 @@ def test_rpc1_req_rep(logger, close_socket_delay, call_state, invoke_callback):
     # Cleaning up sockets takes some time
     close_socket_delay()
 
-    assert response == 'value1:value2'
+    assert response[0] == 'value1:value2'
     assert call_state.last_invoked_param1 == 'value1'
 
 
@@ -95,7 +95,7 @@ def test_rpc1_req_rep_invalid_function(
             time_out_in_sec=3,
         )
     except Exception as e:
-        assert str(e) == "Function 'invoke_test_does_not_exist' is not " \
+        assert str(e) == 'Function "invoke_test_does_not_exist" is not ' \
             'implemented on server. Check rpc_functions on server if it ' \
             'contains the function name'
         assert call_state.last_invoked_param1 is None

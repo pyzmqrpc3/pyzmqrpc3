@@ -1,8 +1,8 @@
 
 
 '''
-Created on Apr 8, 2014
-Edited on Oct 22, 2020
+Created on Apr 2014
+Edited on Oct 2020
 
 @author: Jan Verhoeven
 @author: Bassem Girgis
@@ -13,15 +13,14 @@ Edited on Oct 22, 2020
 
 import json
 import time
-from typing import Optional
+from typing import Optional, Tuple
 
 import zmq
 
-from ..heartbeat import zmq_sub_heartbeat
-from ..logger import logger
+from ..base import ZmqBase
 
 
-class ZmqSender:
+class ZmqSender(ZmqBase):
     '''
     ZmqSender implements a ZeroMQ REQ or PUB socket to send messages out via a
     send function. The send function is equipped with a timeout and automatic
@@ -33,256 +32,330 @@ class ZmqSender:
 
     def __init__(
             self,
-            zmq_req_endpoints=None,
-            zmq_pub_endpoint=None,
+            zmq_req_endpoints: Tuple[str, ...] = None,
+            zmq_pub_endpoint: Optional[str] = None,
             username: Optional[str] = None,
             password: Optional[str] = None):
-        self.context = zmq.Context()
-        self.poller = zmq.Poller()
+        self.__context = zmq.Context()
+        self.__poller = zmq.Poller()
 
-        self.username = username
-        self.password = password
+        self.__username = username
+        self.__password = password
 
-        self.zmq_req_endpoints = zmq_req_endpoints
-        self.zmq_pub_endpoint = zmq_pub_endpoint
+        self.__zmq_req_endpoints: Tuple[str, ...] = tuple(
+            zmq_req_endpoints or []
+        )
+        self.__zmq_pub_endpoint = zmq_pub_endpoint
 
-        self.pub_socket = None
-        self.req_socket = None
+        self.__pub_socket: zmq.Socket = None
+        self.__req_sockets: Tuple[zmq.Socket, ...] = None
 
-        self.recreate_pub_socket = False
-        self.recreate_req_socket = False
+        self.__recreate_pub_socket = False
+        self.__recreate_req_socket = False
 
         self.create_pub_socket()
         self.create_req_socket()
 
-        # 'Prevent' slow joiner problem
-        time.sleep(0.5)
-
-    def destroy_req_socket(self) -> None:
-        error_message = None
-        if self.req_socket is not None:
-            try:
-                self.poller.unregister(self.req_socket)
-            except Exception as e:
-                error_message = "Cannot un-register REQ socket to poller. "
-                "Exception: {0}".format(e)
-            try:
-                self.req_socket.setsockopt(zmq.LINGER, 0)
-            except Exception as e:
-                error_message = "Cannot set LINGER socket option. "
-                "Exception: {0}".format(e)
-            try:
-                for endpoint in self.zmq_req_endpoints:
-                    logger.debug("Disconnect REQ socket to %s", endpoint)
-                    self.req_socket.disconnect(endpoint)
-            except Exception as e:
-                error_message = "Cannot disconnect REQ socket. "
-                "Exception: {0}".format(e)
-            try:
-                logger.debug("Close REQ socket to %s", self.zmq_req_endpoints)
-                self.req_socket.close()
-            except Exception as e:
-                error_message = "Cannot close REQ socket. "
-                "Exception: {0}".format(e)
-        self.req_socket = None
-        if error_message is not None:
-            logger.error(error_message)
-
-    def destroy_pub_socket(self) -> None:
-        error_message = None
-        if self.pub_socket is not None:
-            try:
-                self.pub_socket.setsockopt(zmq.LINGER, 0)
-            except Exception as e:
-                error_message = "Cannot set LINGER socket option. "
-                "Exception: {0}".format(e)
-            try:
-                address = self.zmq_pub_endpoint
-                # Since some recent version of pyzmq it does not accept unbind
-                # of an address with '*'. Replace it with 0.0.0.0
-                if '*' in address:
-                    address = address.replace('*', '0.0.0.0')
-                logger.debug("Unbind PUB socket to %s", self.zmq_pub_endpoint)
-                self.pub_socket.unbind(address)
-            except Exception as e:
-                raise Exception(
-                    "Cannot unbind PUB socket from {0}.".format(
-                        self.zmq_pub_endpoint)
-                ) from e
-            try:
-                logger.debug("Close PUB socket to %s", self.zmq_pub_endpoint)
-                self.pub_socket.close()
-            except Exception as e:
-                error_message = "Cannot close PUB socket. "
-                "Exception: {0}".format(e)
-        self.pub_socket = None
-        if error_message is not None:
-            logger.error(error_message)
-
-    def create_req_socket(self) -> None:
-        if self.req_socket is not None:
-            raise RuntimeError(
-                "Want create new REQ socket, but old REQ Socket is "
-                "not destroyed.")
-
-        if self.zmq_req_endpoints:
-            self.req_socket = self.context.socket(zmq.REQ)
-            if self.username and self.password:
-                try:
-                    self.req_socket.setsockopt_string(
-                        zmq.PLAIN_USERNAME,
-                        self.username,
-                    )
-
-                    self.req_socket.setsockopt_string(
-                        zmq.PLAIN_PASSWORD,
-                        self.password,
-                    )
-                except TypeError:
-                    # In case of python 2.
-                    self.req_socket.setsockopt(
-                        zmq.PLAIN_USERNAME,
-                        self.username,
-                    )
-
-                    self.req_socket.setsockopt(
-                        zmq.PLAIN_PASSWORD,
-                        self.password,
-                    )
-            try:
-                for endpoint in self.zmq_req_endpoints:
-                    logger.debug("Connect REQ socket to %s", endpoint)
-                    self.req_socket.connect(endpoint)
-            except Exception as e:
-                raise Exception(
-                    "Cannot connect REQ socket to {0}.".format(
-                        self.zmq_req_endpoints)
-                ) from e
-            try:
-                self.poller.register(self.req_socket, zmq.POLLIN)
-            except Exception as e:
-                raise Exception(
-                    "Cannot register REQ socket to poller. ") from e
+    @property
+    def has_username_and_password(self) -> bool:
+        return self.__username and self.__password
 
     def create_pub_socket(self) -> None:
-        if self.pub_socket is not None:
+        if self.__pub_socket is not None:
             raise RuntimeError(
-                "Want create new PUB socket, but old PUB Socket is not "
-                "destroyed."
+                'Want create new PUB socket, but old PUB Socket is not '
+                'destroyed.'
             )
 
-        if self.zmq_pub_endpoint:
-            self.pub_socket = self.context.socket(zmq.PUB)
-            if self.username and self.password:
-                self.pub_socket.plain_username = self.username
-                self.pub_socket.plain_password = self.password
-            # Make sure we buffer enough (100000 messages) in case of network
-            # troubles...
-            self.pub_socket.setsockopt(zmq.SNDHWM, 100000)
+        pub_endpoint = self.__zmq_pub_endpoint
+
+        if pub_endpoint is None:
+            return
+
+        self.__pub_socket = socket = self.__context.socket(zmq.PUB)
+        if self.has_username_and_password:
+            socket.plain_username = self.__username
+            socket.plain_password = self.__password
+
+        # Make sure we buffer enough (100000 messages) in case of network
+        # troubles...
+        socket.setsockopt(zmq.SNDHWM, 100000)
+
+        try:
+            self._debug('Bind PUB socket to "%s"', pub_endpoint)
+            socket.bind(pub_endpoint)
+        except Exception as e:
+            raise Exception(
+                'Cannot bind PUB socket to "{0}"'.format(pub_endpoint)
+            ) from e
+
+    def destroy_pub_socket(self) -> None:
+        if self.__pub_socket is None:
+            return
+
+        socket = self.__pub_socket
+        end_point = self.__zmq_pub_endpoint
+
+        # Since some recent version of pyzmq it does not accept unbind
+        # of an address with '*'. Replace it with 0.0.0.0
+        end_point = end_point.replace('*', '0.0.0.0')
+
+        error_message = ''
+
+        try:
+            socket.setsockopt(zmq.LINGER, 0)
+        except Exception as e:
+            error_message += 'Cannot set LINGER socket option. ' \
+                'Exception: {0}\n'.format(e)
+
+        self._debug('Unbind PUB socket to "%s"', end_point)
+        try:
+            socket.unbind(end_point)
+        except Exception as e:
+            raise Exception(
+                'Cannot unbind PUB socket from {0}.'.format(end_point)
+            ) from e
+
+        self._debug('Close PUB socket to "%s"', end_point)
+        try:
+            socket.close()
+        except Exception as e:
+            error_message += 'Cannot close PUB socket. ' \
+                'Exception: {0}\n'.format(e)
+
+        self.__pub_socket = None
+        if error_message:
+            self._error(error_message)
+
+    def create_req_socket(self) -> None:
+        if self.__req_sockets is not None:
+            raise RuntimeError(
+                'Want create new REQ socket, but old REQ Socket is '
+                'not destroyed.')
+
+        if not self.__zmq_req_endpoints:
+            return
+
+        socket_list = []
+
+        for end_point in self.__zmq_req_endpoints:
+            socket = self.__context.socket(zmq.REQ)
+
+            if self.has_username_and_password:
+                socket.setsockopt_string(
+                    zmq.PLAIN_USERNAME,
+                    self.__username,
+                )
+
+                socket.setsockopt_string(
+                    zmq.PLAIN_PASSWORD,
+                    self.__password,
+                )
+
+            self._debug('Connect REQ socket to "%s"', end_point)
+
             try:
-                logger.debug("Bind PUB socket to %s", self.zmq_pub_endpoint)
-                self.pub_socket.bind(self.zmq_pub_endpoint)
+                socket.connect(end_point)
             except Exception as e:
                 raise Exception(
-                    "Cannot bind PUB socket to {0}.".format(
-                        self.zmq_pub_endpoint)
+                    'Cannot connect REQ socket to {0}.'.format(end_point)
                 ) from e
 
-    def _send_over_pub_socket(self, message) -> None:
-        if self.pub_socket is not None:
             try:
-                self.pub_socket.send_string(message)
+                self.__poller.register(socket, zmq.POLLIN)
             except Exception as e:
-                self.recreate_pub_socket = True
-                raise RuntimeError(
-                    "Cannot send message on PUB socket. Highly exceptional. "
-                    "Mark PUB socket for renewal. Consider this message "
-                    "lost.") from e
+                raise Exception('Cannot register REQ socket to poller.') from e
 
-    def handle_response(self, response_message_json) -> Optional[str]:
+            socket_list.append(socket)
+
+        self.__req_sockets = tuple(socket_list)
+
+    def destroy_req_socket(self) -> None:
+        if self.__req_sockets is None:
+            return
+
+        error_message = ''
+
+        for end_point, socket in zip(
+                self.__zmq_req_endpoints, self.__req_sockets):
+
+            try:
+                self.__poller.unregister(socket)
+            except Exception as e:
+                error_message += 'Cannot un-register REQ socket to poller. ' \
+                    'Exception: {0}\n'.format(e)
+
+            try:
+                socket.setsockopt(zmq.LINGER, 0)
+            except Exception as e:
+                error_message += 'Cannot set LINGER socket option. ' \
+                    'Exception: {0}\n'.format(e)
+
+            self._debug('Disconnect REQ socket to "%s"', end_point)
+            try:
+                socket.disconnect(end_point)
+            except Exception as e:
+                error_message += 'Cannot disconnect REQ socket. ' \
+                    'Exception: {0}\n'.format(e)
+
+            self._debug('Close REQ socket to "%s"', self.__zmq_req_endpoints)
+            try:
+                socket.close()
+            except Exception as e:
+                error_message += 'Cannot close REQ socket. ' \
+                    'Exception: {0}\n'.format(e)
+
+        self.__req_sockets = None
+        if error_message:
+            self._error(error_message)
+
+    def _send_over_pub_socket(self, message: str) -> None:
+        if self.__pub_socket is None:
+            return
+
         try:
-            response_message_dict = json.loads(response_message_json)
+            self.__pub_socket.send_string(message)
+        except Exception as e:
+            self.__recreate_pub_socket = True
+            raise RuntimeError(
+                'Cannot send message on PUB socket. Highly exceptional. '
+                'Mark PUB socket for renewal. Consider this message lost.'
+            ) from e
+
+    def _handle_response(self, message: str) -> Tuple[bool, object]:
+        try:
+            payload: dict = json.loads(message)
         except BaseException as e:
-            raise Exception(
-                "Marshalling error: Response is not a json message") from e
-        else:
-            if "status_code" not in response_message_dict:
-                raise Exception("No status_code in response")
+            self.__recreate_req_socket = True
+            return (
+                False,
+                Exception(
+                    'Marshalling error: Response is not a json message. '
+                    'Exception {0}'.format(e)
+                ),
+            )
 
-            if response_message_dict["status_code"] == 200 and \
-                    "response_message" in response_message_dict:
-                return response_message_dict["response_message"]
+        status_code: int = payload.get(self.STATUS_CODE, None)
 
-            if response_message_dict["status_code"] != 200 and \
-                    "status_message" in response_message_dict:
-                raise Exception(response_message_dict["status_message"])
+        if status_code is None:
+            self.__recreate_req_socket = True
+            return (
+                False,
+                Exception('No status_code in response.'),
+            )
 
-            if response_message_dict["status_code"] != 200 and \
-                    "status_message" not in response_message_dict:
-                raise Exception(
-                    "Error occurred with code {0}".format(
-                        response_message_dict["status_code"]))
+        status_message = payload.get(self.STATUS_MSG, None)
+
+        if status_code != self.STATUS_CODE_OK:
+            self.__recreate_req_socket = True
+            return (
+                False,
+                Exception(
+                    status_message
+                    if status_message else
+                    'Error occurred with code {0}'.format(status_code)
+                ),
+            )
+
+        return (
+            True,
+            payload.get(self.RESPONSE_MSG, None),
+        )
 
     def _send_over_req_socket(
             self,
             message: str,
-            time_out_in_sec: int = 10) -> Optional[str]:
-        if self.req_socket is None:
-            return
+            time_out_in_sec: int = 10) -> Tuple[object]:
+        if self.__req_sockets is None:
+            return None
 
-        try:
-            self.req_socket.send_string(message)
-        except Exception as e:
-            self.recreate_req_socket = True
-            raise Exception(
-                "Cannot send message on REQ socket. This is very "
-                "exceptional. Please check logs. Marking REQ socket "
-                "to be recreated on next try. Message can be considered "
-                "lost.") from e
-        else:
-            # Wait for given time to receive response.
-            start_time = time.time()
-            while start_time + time_out_in_sec > time.time():
+        response_list = [None] * len(self.__zmq_req_endpoints)
+
+        for idx, (end_point, socket) in enumerate(zip(
+                self.__zmq_req_endpoints, self.__req_sockets)):
+            try:
+                socket.send_string(message)
+            except Exception as e:
+                self.__recreate_req_socket = True
+                response_list[idx] = (
+                    False, Exception(
+                        'Cannot send message on REQ socket {0}. This is very '
+                        'exceptional. Please check logs. Marking REQ socket '
+                        'to be recreated on next try. Message can be considered '
+                        'lost. Exception {1}'.format(
+                            end_point, e,), ))
+
+        # Wait for given time to receive response.
+        expire_time = time.time() + time_out_in_sec
+        while expire_time > time.time():
+            for idx, (end_point, socket) in enumerate(zip(
+                    self.__zmq_req_endpoints, self.__req_sockets)):
+                if response_list[idx] is not None:
+                    continue
+
                 # X seconds timeout before quiting on waiting for response
-                req_socks = dict(self.poller.poll(1000))
-                if req_socks.get(self.req_socket) == zmq.POLLIN:
-                    try:
-                        response_message_json = self.req_socket.recv_string()
-                    except Exception as e:
-                        logger.error(
-                            "Could not receive message from socket. "
-                            "Marking REQ socket to be recreated on next "
-                            "try. Exception: %s", e)
-                        self.recreate_req_socket = True
-                    else:
-                        return self.handle_response(response_message_json)
-            # Some unexpected socket related error occurred. Recreate the
-            # REQ socket.
-            self.recreate_req_socket = True
+                req_socks = dict(self.__poller.poll(1000))
+                if req_socks.get(socket) != zmq.POLLIN:
+                    continue
+
+                try:
+                    response_message = socket.recv_string()
+                except Exception as e:
+                    self.__recreate_req_socket = True
+                    response_list[idx] = (
+                        False,
+                        Exception(
+                            'Could not receive message from socket %s. '
+                            'Marking REQ socket to be recreated on next '
+                            'try. Exception: %s'.format(end_point, e)
+                        ),
+                    )
+                    continue
+
+                response_list[idx] = self._handle_response(response_message)
+
+            if all(response_list):
+                break
+
+        # Some unexpected socket related error occurred. Recreate the
+        # REQ socket.
+        if not all(response_list):
+            self.__recreate_req_socket = True
             raise Exception(
-                "No response received on ZMQ Request to end point"
-                " {0} in {1} seconds. Discarding message. Marking REQ "
-                "socket to be recreated on next try.".format(
-                    self.zmq_req_endpoints,
+                'No response received on ZMQ Request to end point'
+                ' {0} in {1} seconds. Discarding message. Marking REQ '
+                'socket to be recreated on next try.'.format(
+                    self.__zmq_req_endpoints,
                     time_out_in_sec,
                 )
             )
 
+        if self.__recreate_req_socket:
+            for response in response_list:
+                if not response or not isinstance(response[1], BaseException):
+                    continue
+                raise response[1]
+
+        return tuple(
+            response[1] if response else None
+            for response in response_list
+        )
+
     def send(
             self,
             message: str,
-            time_out_in_sec: int = 60) -> Optional[str]:
+            time_out_in_sec: int = 60) -> Tuple[object]:
         # Create sockets if needed. Raise an exception if any problems are
         # encountered
-        if self.recreate_pub_socket:
+        if self.__recreate_pub_socket:
             self.destroy_pub_socket()
             self.create_pub_socket()
-            self.recreate_pub_socket = False
+            self.__recreate_pub_socket = False
 
-        if self.recreate_req_socket:
+        if self.__recreate_req_socket:
             self.destroy_req_socket()
             self.create_req_socket()
-            self.recreate_req_socket = False
+            self.__recreate_req_socket = False
 
         # Sockets must exist otherwise we would not be here...
         # Any errors in the following lines will throw an error that must be
@@ -294,7 +367,7 @@ class ZmqSender:
         )
 
     def send_heartbeat(self) -> None:
-        self.send(zmq_sub_heartbeat)
+        self.send(self.HEARTBEAT_MSG)
 
     def destroy(self) -> None:
         self.destroy_req_socket()

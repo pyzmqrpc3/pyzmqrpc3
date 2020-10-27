@@ -1,8 +1,8 @@
 
 
 '''
-Created on Apr 8, 2014
-Edited on Oct 22, 2020
+Created on Apr 2014
+Edited on Oct 2020
 
 @author: Jan Verhoeven
 @author: Bassem Girgis
@@ -11,12 +11,13 @@ Edited on Oct 22, 2020
 '''
 
 
-from ..logger import logger
-from ..receiver import ZmqReceiver
-from ..sender import ZmqSender
+from typing import Optional, Tuple
+
+from ..receiver import SubSocketAddress
+from .ZmqProxy import ZmqProxy
 
 
-class ZmqProxySub2Req(ZmqReceiver):
+class ZmqProxySub2Req(ZmqProxy):
     '''
     # This class implements a simple message forwarding from a PUB/SUB
     # connection to a REQ/REP connection.
@@ -26,31 +27,21 @@ class ZmqProxySub2Req(ZmqReceiver):
 
     def __init__(
             self,
-            zmq_sub_connect_addresses,
-            zmq_req_connect_addresses,
-            recreate_timeout=600,
-            username_sub=None,
-            password_sub=None,
-            username_req=None,
-            password_req=None):
+            zmq_sub_connect_addresses: Tuple[SubSocketAddress, ...],
+            zmq_req_connect_addresses: Tuple[str, ...],
+            recreate_timeout: Optional[int] = 600,
+            proxy_timeout: Optional[int] = 60,
+            username_sub: Optional[str] = None,
+            password_sub: Optional[str] = None,
+            username_req: Optional[str] = None,
+            password_req: Optional[str] = None):
         super().__init__(
-            zmq_sub_connect_addresses=zmq_sub_connect_addresses,
-            recreate_timeout=recreate_timeout,
-            username=username_sub,
-            password=password_sub,
+            recv_sub_connect_addresses=zmq_sub_connect_addresses,
+            recv_recreate_timeout=recreate_timeout,
+            recv_username=username_sub,
+            recv_password=password_sub,
+            proxy_timeout=proxy_timeout,
+            send_req_endpoints=zmq_req_connect_addresses,
+            send_username=username_req,
+            send_password=password_req,
         )
-
-        self.sender = ZmqSender(
-            zmq_req_endpoints=zmq_req_connect_addresses,
-            username=username_req,
-            password=password_req,
-        )
-
-    def handle_incoming_message(self, message):
-        # We don't care for the response, since we cannot pass it back via the
-        # pub socket or we got none from a pub socket
-        try:
-            self.sender.send(message, time_out_in_sec=60)
-        except Exception as e:
-            logger.error(e)
-        return None

@@ -69,8 +69,8 @@ license_name = 'MIT'
 
 packages = [
     'zmqrpc',
+    'zmqrpc.base',
     'zmqrpc.client',
-    'zmqrpc.heartbeat',
     'zmqrpc.logger',
     'zmqrpc.proxy',
     'zmqrpc.receiver',

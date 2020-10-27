@@ -1,8 +1,8 @@
 
 
 '''
-Created on Apr 8, 2014
-Edited on Oct 22, 2020
+Created on Apr 2014
+Edited on Oct 2020
 
 @author: Jan Verhoeven
 @author: Bassem Girgis
@@ -67,7 +67,7 @@ class SubSocket:
 
         self.__poller.register(zmq_socket, zmq.POLLIN)
         self.__last_received_time = time.time()
-        logger.debug("Created SUB socket to %s", self.__address)
+        logger.debug('Created SubSocket to "%s"', self.__address)
 
     def destroy(self) -> None:
         if not self.has_zmq_socket:
@@ -93,7 +93,7 @@ class SubSocket:
 
         self.__zmq_socket = None
 
-        logger.debug("Destroyed SUB socket bound to %s", self.__address)
+        logger.debug('Destroyed SubSocket bound to "%s"', self.__address)
 
     def recv_string(self, socks: dict) -> Optional[str]:
         if self.has_zmq_socket and (socks.get(self.zmq_socket) == zmq.POLLIN):
@@ -105,7 +105,7 @@ class SubSocket:
         ) > self.__last_received_time + self.__timeout_in_sec:
             # Recreate sockets
             logger.warning(
-                'Heartbeat timeout exceeded. Recreating SUB socket to "%s"',
+                'Heartbeat timeout exceeded. Recreating SubSocket to "%s"',
                 self.__address
             )
             self.destroy()

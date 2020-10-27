@@ -1,8 +1,8 @@
 
 
 '''
-Created on Apr 8, 2014
-Edited on Oct 22, 2020
+Created on Apr 2014
+Edited on Oct 2020
 
 @author: Jan Verhoeven
 @author: Bassem Girgis
@@ -26,7 +26,7 @@ from zmqrpc import (
 )
 
 
-def notest_rpc1_req_rep_with_rep_req_proxy_without_password(
+def test_rpc1_req_rep_with_rep_req_proxy_without_password(
         logger,
         close_socket_delay,
         two_sec_delay,
@@ -66,6 +66,9 @@ def notest_rpc1_req_rep_with_rep_req_proxy_without_password(
         time_out_in_sec=3,
     )
 
+    # Wait a bit to make sure message is sent...
+    two_sec_delay()
+
     server_thread.stop()
     server_thread.join()
     proxy_rep_req_thread.stop()
@@ -75,13 +78,14 @@ def notest_rpc1_req_rep_with_rep_req_proxy_without_password(
     # Cleaning up sockets takes some time
     close_socket_delay()
 
-    assert response == 'value1:value2'
+    assert response[0] is None
     assert call_state.last_invoked_param1 == 'value1'
 
 
-def notest_rpc1_req_rep_with_rep_req_proxy(
+def test_rpc1_req_rep_with_rep_req_proxy(
         logger,
         close_socket_delay,
+        two_sec_delay,
         call_state,
         invoke_callback):
     # RPC invoke method over REQ/REP sockets with an extra rep/req proxy in
@@ -117,14 +121,19 @@ def notest_rpc1_req_rep_with_rep_req_proxy(
     )
     server_thread.start()
 
+    two_sec_delay()
+
     response = client.invoke(
         function_name='invoke_test',
         function_parameters={
-            'param1': 'value1',
+            'param1': 'value1test_proxy',
             'param2': 'value2',
         },
         time_out_in_sec=3,
     )
+
+    # Wait a bit to make sure message is sent...
+    two_sec_delay()
 
     server_thread.stop()
     server_thread.join()
@@ -135,13 +144,13 @@ def notest_rpc1_req_rep_with_rep_req_proxy(
     # Cleaning up sockets takes some time
     close_socket_delay()
 
-    assert response == 'value1:value2'
+    assert response[0] is None
+    assert call_state.last_invoked_param1 == 'value1test_proxy'
 
 
 def test_rpc1_pub_sub_with_pub_sub_proxy(
         logger,
         close_socket_delay,
-        slow_joiner_delay,
         call_state,
         invoke_callback,
         two_sec_delay):
@@ -168,7 +177,7 @@ def test_rpc1_pub_sub_with_pub_sub_proxy(
     client = ZmqRpcClient(zmq_pub_endpoint='tcp://*:4566')
 
     # Wait a bit to avoid slow joiner...
-    slow_joiner_delay()
+    two_sec_delay()
 
     response = client.invoke(
         function_name='invoke_test',
@@ -196,11 +205,7 @@ def test_rpc1_pub_sub_with_pub_sub_proxy(
     assert call_state.last_invoked_param1 == 'value2sub'
 
 
-def test_proxy(
-        logger,
-        close_socket_delay,
-        slow_joiner_delay,
-        two_sec_delay):
+def test_proxy(logger, close_socket_delay, two_sec_delay):
     # With proxy elements
     logger.info(
         'Add a proxy setup to the end to end chain '
@@ -230,9 +235,7 @@ def test_proxy(
     )
     receiver_thread.start()
 
-    # Take 0.5 second for sockets to connect to prevent 'slow joiner'
-    # problem
-    slow_joiner_delay()
+    two_sec_delay()
 
     sender.send('test')
 
@@ -253,8 +256,6 @@ def test_proxy(
             receiver_thread.get_last_received_message())
     )
 
-    assert receiver_thread.get_last_received_message() == 'test'
-
     receiver_thread.stop()
     receiver_thread.join()
     proxy_sub_req_thread.stop()
@@ -265,6 +266,8 @@ def test_proxy(
 
     # Cleaning up sockets takes some time
     close_socket_delay()
+
+    assert receiver_thread.get_last_received_message() == 'test'
 
 
 def test_rpc1_req_rep_with_rep_req_buffered_proxy(
@@ -322,7 +325,7 @@ def test_rpc1_req_rep_with_rep_req_buffered_proxy(
 
     two_sec_delay()
 
-    assert response is None
+    assert response[0] is None
     assert call_state.last_invoked_param1 == 'value1viaproxy'
 
     # Now send a couple of messages while nothing is receiving to validate

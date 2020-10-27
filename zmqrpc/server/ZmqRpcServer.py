@@ -1,8 +1,8 @@
 
 
 '''
-Created on Apr 8, 2014
-Edited on Oct 22, 2020
+Created on Apr 2014
+Edited on Oct 2020
 
 @author: Jan Verhoeven
 @author: Bassem Girgis
@@ -12,10 +12,9 @@ Edited on Oct 22, 2020
 
 
 import json
+from typing import Callable, Dict, Optional, Tuple
 
-from ..heartbeat import zmq_sub_heartbeat
-from ..logger import logger
-from ..receiver import ZmqReceiver
+from ..receiver import SubSocketAddress, ZmqReceiver
 
 
 class ZmqRpcServer(ZmqReceiver):
@@ -35,64 +34,76 @@ class ZmqRpcServer(ZmqReceiver):
 
     def __init__(
             self,
-            zmq_rep_bind_address=None,
-            zmq_sub_connect_addresses=None,
-            rpc_functions=None,
-            recreate_timeout=600,
-            username=None,
-            password=None):
+            zmq_rep_bind_address: Optional[str] = None,
+            zmq_sub_connect_addresses: Tuple[SubSocketAddress, ...] = None,
+            rpc_functions: Dict[str, Callable] = None,
+            recreate_timeout: Optional[int] = 600,
+            username: Optional[str] = None,
+            password: Optional[str] = None):
         super().__init__(
-            zmq_rep_bind_address,
-            zmq_sub_connect_addresses,
-            recreate_timeout,
-            username,
-            password,
+            zmq_rep_bind_address=zmq_rep_bind_address,
+            zmq_sub_connect_addresses=zmq_sub_connect_addresses,
+            recreate_timeout=recreate_timeout,
+            username=username,
+            password=password,
         )
-        self.rpc_functions = rpc_functions
+        self.__rpc_functions = rpc_functions or dict()
 
-    def handle_incoming_message(self, message):
-        if message == zmq_sub_heartbeat:
+    def handle_incoming_message(self, message: str) -> Optional[str]:
+        if message == self.HEARTBEAT_MSG:
             return None
 
-        status_code = 200
-        status_message = "OK"
-        response_message = None
         try:
-            incoming_message = json.loads(message)
+            payload: dict = json.loads(message)
         except Exception as e:
-            status_code = 400
-            status_message = "Incorrectly marshalled function. Incoming message is no proper json formatted string. Exception: {0}".format(
-                e)
-            logger.info(status_message)
-        else:
-            if "function" not in incoming_message:
-                status_code = 450
-                status_message = "Incorrectly marshalled function. No function name provided."
-                logger.warning(status_message)
-            else:
-                function_name = incoming_message["function"]
-                parameters = None
-                if "parameters" in incoming_message:
-                    parameters = incoming_message["parameters"]
-                if function_name not in self.rpc_functions:
-                    status_code = 451
-                    status_message = "Function '{0}' is not implemented on server. Check rpc_functions on server if it contains the function name".format(
-                        function_name)
-                    logger.warning(status_message)
-                else:
-                    try:
-                        if parameters is None:
-                            response_message = self.rpc_functions[function_name](
-                            )
-                        else:
-                            response_message = self.rpc_functions[function_name](
-                                **parameters)
-                    except Exception as e:
-                        status_code = 463
-                        status_message = "Exception raised when calling function {0}. Exception: {1} ".format(
-                            function_name, e)
-                        logger.warning(status_message)
-                        logger.exception(e)
+            status_message = 'Incorrectly marshalled function. Incoming ' \
+                'message is no proper json formatted string. ' \
+                'Exception: {0}'.format(e)
+            self._info(status_message)
+            return self.create_response_message(
+                status_code=self.STATUS_CODE_BAD_SERIALIZATION,
+                status_message=status_message,
+            )
+
+        function_name = payload.get(self.RPC_FUNCTION, None)
+
+        if function_name is None or function_name == '':
+            status_message = 'Incorrectly marshalled function. ' \
+                'No function name provided.'
+            self._warning(status_message)
+            return self.create_response_message(
+                status_code=self.STATUS_CODE_MISSING_FUNCTION,
+                status_message=status_message,
+            )
+
+        func_callback = self.__rpc_functions.get(function_name, None)
+
+        if func_callback is None:
+            status_message = 'Function "{0}" is not implemented on server. ' \
+                'Check rpc_functions on server if it contains the ' \
+                'function name'.format(function_name)
+            self._warning(status_message)
+            return self.create_response_message(
+                status_code=self.STATUS_CODE_BAD_FUNCTION,
+                status_message=status_message,
+            )
+
+        parameters = payload.get(self.RPC_PARAMETERS, [])
+
+        try:
+            response_message = func_callback(**parameters)
+        except Exception as e:
+            status_message = 'Exception raised when calling function ' \
+                '{0}. Exception: {1} '.format(function_name, e)
+            self._warning(status_message)
+            self._exception(e)
+            return self.create_response_message(
+                status_code=self.STATUS_CODE_EXCEPTION_RAISED,
+                status_message=status_message,
+            )
 
         return self.create_response_message(
-            status_code, status_message, response_message)
+            status_code=self.STATUS_CODE_OK,
+            status_message=self.STATUS_MSG_OK,
+            response_message=response_message,
+        )

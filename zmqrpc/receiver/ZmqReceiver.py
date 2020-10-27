@@ -1,8 +1,8 @@
 
 
 '''
-Created on Apr 8, 2014
-Edited on Oct 22, 2020
+Created on Apr 2014
+Edited on Oct 2020
 
 @author: Jan Verhoeven
 @author: Bassem Girgis
@@ -17,13 +17,12 @@ from typing import Optional, Tuple
 import zmq
 from zmq.auth.thread import ThreadAuthenticator
 
-from ..heartbeat import zmq_sub_heartbeat
-from ..logger import logger
+from ..base import ZmqBase
 from .RepSocket import RepSocket
 from .SubSocket import SubSocket, SubSocketAddress
 
 
-class ZmqReceiver:
+class ZmqReceiver(ZmqBase):
     '''
     A ZmqReceiver class will listen on a REP or SUB socket for messages
     and will invoke a 'HandleIncomingMessage' method to process it.
@@ -35,9 +34,10 @@ class ZmqReceiver:
             self,
             zmq_rep_bind_address: Optional[str] = None,
             zmq_sub_connect_addresses: Tuple[SubSocketAddress, ...] = None,
-            recreate_timeout: int = 600,
+            recreate_timeout: Optional[int] = 600,
             username: Optional[str] = None,
             password: Optional[str] = None):
+        super().__init__()
         self.__context = zmq.Context()
         self.__poller = zmq.Poller()
 
@@ -83,50 +83,63 @@ class ZmqReceiver:
         60 seconds
         '''
 
-        logger.info('Closing pub and sub sockets...')
+        self._info('Closing pub and sub sockets...')
         self.__is_running = False
 
         if self.__auth is not None:
             self.__auth.stop()
 
+    def _run_rep_socket(self, socks) -> None:
+        if self.__rep_socket is None:
+            return
+
+        incoming_message = self.__rep_socket.recv_string(socks)
+        if incoming_message is None:
+            return
+
+        if incoming_message != self.HEARTBEAT_MSG:
+            self.__last_received_message = incoming_message
+
+        self._debug('Got info from REP socket')
+
+        try:
+            response_message = self.handle_incoming_message(
+                incoming_message,
+            )
+            self.__rep_socket.send(response_message)
+        except Exception as e:
+            self._error(e)
+
+    def _run_sub_sockets(self, socks) -> None:
+        for sub_socket in self.__sub_sockets:
+            incoming_message = sub_socket.recv_string(socks)
+
+            if incoming_message is None:
+                continue
+
+            if incoming_message != self.HEARTBEAT_MSG:
+                self.__last_received_message = incoming_message
+
+            self._debug('Got info from SUB socket')
+
+            try:
+                self.handle_incoming_message(incoming_message)
+            except Exception as e:
+                self._error(e)
+
     def run(self) -> None:
         self.__is_running = True
 
         while self.__is_running:
-            socks = dict(self.__poller.poll(1000))
+            try:
+                socks = dict(self.__poller.poll(1000))
+            except BaseException as e:
+                self._error(e)
+                continue
 
-            logger.debug('Poll cycle over. checking sockets')
-
-            if self.__rep_socket:
-                incoming_message = self.__rep_socket.recv_string(socks)
-                if incoming_message is not None:
-                    self.__last_received_message = incoming_message
-
-                    try:
-                        logger.debug('Got info from REP socket')
-
-                        response_message = self.handle_incoming_message(
-                            incoming_message,
-                        )
-
-                        self.__rep_socket.send(response_message)
-                    except Exception as e:
-                        logger.error(e)
-
-            for sub_socket in self.__sub_sockets:
-                incoming_message = sub_socket.recv_string(socks)
-
-                if incoming_message is not None:
-
-                    if incoming_message != zmq_sub_heartbeat:
-                        self.__last_received_message = incoming_message
-
-                    logger.debug("Got info from SUB socket")
-
-                    try:
-                        self.handle_incoming_message(incoming_message)
-                    except Exception as e:
-                        logger.error(e)
+            self._debug('Poll cycle over. checking sockets')
+            self._run_rep_socket(socks)
+            self._run_sub_sockets(socks)
 
         if self.__rep_socket:
             self.__rep_socket.destroy()
@@ -140,22 +153,22 @@ class ZmqReceiver:
             status_message: str,
             response_message: Optional[str] = None) -> str:
         payload = {
-            'status_code': status_code,
-            'status_message': status_message,
+            self.STATUS_CODE: status_code,
+            self.STATUS_MSG: status_message,
         }
 
         if response_message is not None:
-            payload['response_message'] = response_message
+            payload[self.RESPONSE_MSG] = response_message
 
         return json.dumps(payload)
 
     def handle_incoming_message(self, message: str) -> Optional[str]:
-        if message == zmq_sub_heartbeat:
+        if message == self.HEARTBEAT_MSG:
             return None
 
         return self.create_response_message(
-            status_code=200,
-            status_message='OK',
+            status_code=self.STATUS_CODE_OK,
+            status_message=self.STATUS_MSG_OK,
         )
 
     def get_last_received_message(self) -> Optional[str]:

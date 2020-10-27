@@ -1,8 +1,8 @@
 
 
 '''
-Created on Apr 8, 2014
-Edited on Oct 22, 2020
+Created on Apr 2014
+Edited on Oct 2020
 
 @author: Jan Verhoeven
 @author: Bassem Girgis
@@ -14,7 +14,7 @@ Edited on Oct 22, 2020
 from threading import Thread
 from typing import Optional, Tuple
 
-from .SubSocket import SubSocket
+from .SubSocket import SubSocket, SubSocketAddress
 from .ZmqReceiver import ZmqReceiver
 
 
@@ -23,7 +23,7 @@ class ZmqReceiverThread(Thread):
     def __init__(
             self,
             zmq_rep_bind_address: Optional[str] = None,
-            zmq_sub_connect_addresses: Tuple[str, ...] = None,
+            zmq_sub_connect_addresses: Tuple[SubSocketAddress, ...] = None,
             recreate_timeout: int = 60,
             username: Optional[str] = None,
             password: Optional[str] = None):

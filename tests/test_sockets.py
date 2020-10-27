@@ -1,8 +1,8 @@
 
 
 '''
-Created on Apr 8, 2014
-Edited on Oct 22, 2020
+Created on Apr 2014
+Edited on Oct 2020
 
 @author: Jan Verhoeven
 @author: Bassem Girgis
@@ -14,7 +14,7 @@ Edited on Oct 22, 2020
 from zmqrpc import ZmqReceiverThread, ZmqSender
 
 
-def test_req_rep_sockets(logger, close_socket_delay):
+def test_req_rep_sockets(logger, close_socket_delay, slow_joiner_delay):
     # Basic send/receive over REQ/REP sockets
     logger.info(
         'Test if sending works over REQ/REP socket, '
@@ -34,6 +34,10 @@ def test_req_rep_sockets(logger, close_socket_delay):
     )
 
     receiver_thread.start()
+
+    # Take 0.5 second for sockets to connect to prevent 'slow joiner'
+    # problem
+    slow_joiner_delay()
 
     sender.send('test', time_out_in_sec=3)
 
@@ -70,49 +74,30 @@ def test_req_rep_sockets(logger, close_socket_delay):
     assert is_success
 
 
-def test_req_rep_sockets_over_inproc(logger, close_socket_delay):
+def test_req_rep_sockets_without_password(
+        logger, close_socket_delay, slow_joiner_delay):
     # Basic send/receive over REQ/REP sockets
     logger.info(
-        'Test if sending works over REQ/REP socket using inproc, '
+        'Test if sending works over REQ/REP socket, '
         'includes a username/password'
     )
 
     sender = ZmqSender(
-        zmq_req_endpoints=['inproc://test'],
-        username='username',
-        password='password',
+        zmq_req_endpoints=['tcp://localhost:47000'],
     )
 
     receiver_thread = ZmqReceiverThread(
-        zmq_rep_bind_address='inproc://test',
-        username='username',
-        password='password',
+        zmq_rep_bind_address='tcp://*:47000',
     )
     receiver_thread.start()
+
+    # Take 0.5 second for sockets to connect to prevent 'slow joiner'
+    # problem
+    slow_joiner_delay()
 
     sender.send('test', time_out_in_sec=3)
 
     assert receiver_thread.get_last_received_message() == 'test'
-
-    logger.info(
-        'Test if sending wrong password over REP/REQ connection '
-        'results in error (actually timeout)'
-    )
-
-    sender = ZmqSender(
-        zmq_req_endpoints=['inproc://test'],
-        username='username',
-        password='wrongpassword',
-    )
-
-    is_success = True
-    try:
-        logger.error(
-            'Error. Did get answer from remote system which was not expected')
-        is_success = False
-    except BaseException:
-        # Could not send message, which is ok in this case
-        logger.info('Success.')
 
     receiver_thread.stop()
     receiver_thread.join()
@@ -120,8 +105,6 @@ def test_req_rep_sockets_over_inproc(logger, close_socket_delay):
 
     # Cleaning up sockets takes some time
     close_socket_delay()
-
-    assert is_success
 
 
 def test_pub_sub_without_passwords(
@@ -136,41 +119,6 @@ def test_pub_sub_without_passwords(
 
     receiver_thread = ZmqReceiverThread(
         zmq_sub_connect_addresses=['tcp://localhost:47001'])
-    receiver_thread.start()
-
-    # Take 0.5 second for sockets to connect to prevent 'slow joiner'
-    # problem
-    slow_joiner_delay()
-
-    sender.send('test')
-
-    # Sleep for pub/sub not guaranteed to be done on completing
-    # send_pub_socket
-    two_sec_delay()
-
-    assert receiver_thread.get_last_received_message() == 'test'
-
-    receiver_thread.stop()
-    receiver_thread.join()
-    sender.destroy()
-
-    # Cleaning up sockets takes some time
-    close_socket_delay()
-
-
-def test_pub_sub_without_passwords_over_inproc(
-        logger,
-        close_socket_delay,
-        slow_joiner_delay,
-        two_sec_delay):
-    # Basic send/receive over PUB/SUB sockets
-    logger.info('Test if sending works over PUB/SUB sockets without passwords')
-
-    sender = ZmqSender(zmq_pub_endpoint='inproc://my_test')
-
-    receiver_thread = ZmqReceiverThread(
-        zmq_sub_connect_addresses=['inproc://my_test'],
-    )
     receiver_thread.start()
 
     # Take 0.5 second for sockets to connect to prevent 'slow joiner'

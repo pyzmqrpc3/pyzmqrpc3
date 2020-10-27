@@ -1,8 +1,8 @@
 
 
 '''
-Created on Apr 8, 2014
-Edited on Oct 22, 2020
+Created on Apr 2014
+Edited on Oct 2020
 
 @author: Jan Verhoeven
 @author: Bassem Girgis
@@ -12,6 +12,9 @@ Edited on Oct 22, 2020
 
 
 from threading import Thread
+from typing import Optional
+
+from .ZmqProxy import ZmqProxy
 
 
 class ZmqProxyThread(Thread):
@@ -19,17 +22,25 @@ class ZmqProxyThread(Thread):
     def __init__(self):
         super().__init__()
 
-        self.proxy = None
+        self.__proxy: Optional[ZmqProxy] = None
 
-    def get_last_received_message(self):
-        if self.proxy:
-            return self.proxy.get_last_received_message()
-        return None
+    def _set_proxy(self, proxy: ZmqProxy) -> None:
+        self.__proxy = proxy
 
-    def run(self):
-        if self.proxy:
-            self.proxy.run()
+    def get_last_received_message(self) -> Optional[str]:
+        if self.__proxy is None:
+            return None
 
-    def stop(self):
-        if self.proxy:
-            self.proxy.stop()
+        return self.__proxy.get_last_received_message()
+
+    def run(self) -> None:
+        if self.__proxy is None:
+            return
+
+        self.__proxy.run()
+
+    def stop(self) -> None:
+        if self.__proxy is None:
+            return
+
+        self.__proxy.stop()

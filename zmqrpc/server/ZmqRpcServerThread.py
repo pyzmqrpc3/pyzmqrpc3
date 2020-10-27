@@ -1,8 +1,8 @@
 
 
 '''
-Created on Apr 8, 2014
-Edited on Oct 22, 2020
+Created on Apr 2014
+Edited on Oct 2020
 
 @author: Jan Verhoeven
 @author: Bassem Girgis
@@ -12,8 +12,9 @@ Edited on Oct 22, 2020
 
 
 from threading import Thread
+from typing import Callable, Dict, Optional, Tuple
 
-from ..receiver import SubSocket
+from ..receiver import SubSocket, SubSocketAddress
 from .ZmqRpcServer import ZmqRpcServer
 
 
@@ -25,12 +26,12 @@ class ZmqRpcServerThread(Thread):
 
     def __init__(
             self,
-            zmq_rep_bind_address=None,
-            zmq_sub_connect_addresses=None,
-            rpc_functions=None,
-            recreate_timeout=60,
-            username=None,
-            password=None):
+            zmq_rep_bind_address: Optional[str] = None,
+            zmq_sub_connect_addresses: Tuple[SubSocketAddress, ...] = None,
+            rpc_functions: Dict[str, Callable] = None,
+            recreate_timeout: Optional[int] = 60,
+            username: Optional[str] = None,
+            password: Optional[str] = None):
         super().__init__()
 
         self.__server = ZmqRpcServer(
@@ -42,7 +43,7 @@ class ZmqRpcServerThread(Thread):
             password=password,
         )
 
-    def get_last_received_message(self):
+    def get_last_received_message(self) -> Optional[str]:
         return self.__server.get_last_received_message()
 
     def run(self) -> None:

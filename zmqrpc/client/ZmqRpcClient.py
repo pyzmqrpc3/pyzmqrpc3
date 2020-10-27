@@ -1,8 +1,8 @@
 
 
 '''
-Created on Apr 8, 2014
-Edited on Oct 22, 2020
+Created on Apr 2014
+Edited on Oct 2020
 
 @author: Jan Verhoeven
 @author: Bassem Girgis
@@ -12,6 +12,7 @@ Edited on Oct 22, 2020
 
 
 import json
+from typing import Optional, Tuple
 
 from ..sender import ZmqSender
 
@@ -26,26 +27,11 @@ class ZmqRpcClient(ZmqSender):
     username/password to 'secure' the connection.
     '''
 
-    def serialize_function_call(
-            self,
-            function_name: str,
-            function_parameters) -> str:
-        message = {"function": function_name}
-        if function_parameters is not None:
-            message["parameters"] = function_parameters
-
-        try:
-            return json.dumps(message)
-        except Exception as e:
-            raise RuntimeError(
-                "Cannot wrap parameters in json format. "
-            ) from e
-
     def invoke(
             self,
             function_name: str,
-            function_parameters=None,
-            time_out_in_sec=600):
+            function_parameters: Tuple[object] = None,
+            time_out_in_sec: Optional[int] = 600) -> Tuple[object]:
         '''
         Invokes a function on a remote ZeroMQ process and returns the result
         of calling the function in case of a REQ socket. Parameters should
@@ -57,6 +43,21 @@ class ZmqRpcClient(ZmqSender):
         '''
 
         # Try to serialize. If it fails, throw an error and exit.
-        message_json = self.serialize_function_call(
-            function_name, function_parameters)
-        return self.send(message_json, time_out_in_sec)
+        payload = {
+            self.RPC_FUNCTION: function_name,
+        }
+
+        if function_parameters is not None:
+            payload[self.RPC_PARAMETERS] = function_parameters
+
+        try:
+            message = json.dumps(payload)
+        except Exception as e:
+            raise RuntimeError(
+                'Cannot wrap parameters in json format. '
+            ) from e
+
+        return self.send(
+            message=message,
+            time_out_in_sec=time_out_in_sec,
+        )

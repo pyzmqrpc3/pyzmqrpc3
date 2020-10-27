@@ -1,8 +1,8 @@
 
 
 '''
-Created on Apr 8, 2014
-Edited on Oct 22, 2020
+Created on Apr 2014
+Edited on Oct 2020
 
 @author: Jan Verhoeven
 @author: Bassem Girgis
@@ -11,11 +11,12 @@ Edited on Oct 22, 2020
 '''
 
 
-from ..receiver import ZmqReceiver
-from ..sender import ZmqSender
+from typing import Optional
+
+from .ZmqProxy import ZmqProxy
 
 
-class ZmqProxyRep2Pub(ZmqReceiver):
+class ZmqProxyRep2Pub(ZmqProxy):
     '''
     This class implements a simple message forwarding from a REQ/REP
     connection to a PUB/SUB connection.
@@ -25,35 +26,21 @@ class ZmqProxyRep2Pub(ZmqReceiver):
 
     def __init__(
             self,
-            zmq_rep_bind_address,
-            zmq_pub_bind_address,
-            recreate_timeout=600,
-            username_rep=None,
-            password_rep=None,
-            username_pub=None,
-            password_pub=None):
+            zmq_rep_bind_address: str,
+            zmq_pub_bind_address: str,
+            recreate_timeout: Optional[int] = 600,
+            proxy_timeout: Optional[int] = 60,
+            username_rep: Optional[str] = None,
+            password_rep: Optional[str] = None,
+            username_pub: Optional[str] = None,
+            password_pub: Optional[str] = None):
         super().__init__(
-            zmq_rep_bind_address=zmq_rep_bind_address,
-            recreate_timeout=recreate_timeout,
-            username=username_rep,
-            password=password_rep,
+            recv_rep_bind_address=zmq_rep_bind_address,
+            recv_recreate_timeout=recreate_timeout,
+            recv_username=username_rep,
+            recv_password=password_rep,
+            proxy_timeout=proxy_timeout,
+            send_pub_endpoint=zmq_pub_bind_address,
+            send_username=username_pub,
+            send_password=password_pub,
         )
-
-        self.__sender = ZmqSender(
-            zmq_req_endpoints=None,
-            zmq_pub_endpoint=zmq_pub_bind_address,
-            username=username_pub,
-            password=password_pub,
-        )
-
-    def handle_incoming_message(self, message):
-        try:
-            self.__sender.send(message, time_out_in_sec=60)
-            # Pub socket does not provide response message, so return OK message
-            return self.create_response_message(200, "OK")
-        except Exception as e:
-            return self.create_response_message(
-                status_code=400,
-                status_message="Error",
-                response_message=e,
-            )
