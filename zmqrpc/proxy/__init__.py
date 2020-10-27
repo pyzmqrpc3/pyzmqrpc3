@@ -1,6 +1,7 @@
 
 
 from .ZmqBufferedProxyRep2ReqThread import ZmqBufferedProxyRep2ReqThread
+from .ZmqProxy import ZmqProxy
 from .ZmqProxyRep2Pub import ZmqProxyRep2Pub
 from .ZmqProxyRep2PubThread import ZmqProxyRep2PubThread
 from .ZmqProxyRep2Req import ZmqProxyRep2Req
