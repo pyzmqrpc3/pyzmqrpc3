@@ -311,7 +311,6 @@ def test_pub_sub_timeout_per_socket_using_heartbeat_function(
 
     two_sec_delay()
 
-    assert call_state.last_invoked_param1 == 'testxx-value4'
     assert server_thread.get_sub_socket(idx=0).zmq_socket == second_socket
 
     server_thread.stop()
@@ -320,3 +319,5 @@ def test_pub_sub_timeout_per_socket_using_heartbeat_function(
 
     # Cleaning up sockets takes some time
     close_socket_delay()
+
+    assert call_state.last_invoked_param1 == 'testxx-value4'

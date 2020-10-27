@@ -325,13 +325,13 @@ def test_rpc1_req_rep_with_rep_req_buffered_proxy(
 
     two_sec_delay()
 
-    assert response[0] is None
-    assert call_state.last_invoked_param1 == 'value1viaproxy'
-
     # Now send a couple of messages while nothing is receiving to validate
     # buffering is working fine
     server_thread.stop()
     server_thread.join()
+
+    assert response[0] is None
+    assert call_state.last_invoked_param1 == 'value1viaproxy'
 
     call_state.last_invoked_param1 = None
     response = client.invoke(
@@ -363,8 +363,6 @@ def test_rpc1_req_rep_with_rep_req_buffered_proxy(
     # retrying delivery. A retry cycle is max 1 sec.
     two_sec_delay()
 
-    assert call_state.last_invoked_param1 == 'value1-2viaproxy'
-
     server_thread.stop()
     server_thread.join()
     buf_proxy_rep_req_thread.stop()
@@ -373,3 +371,5 @@ def test_rpc1_req_rep_with_rep_req_buffered_proxy(
 
     # Cleaning up sockets takes some time
     close_socket_delay()
+
+    assert call_state.last_invoked_param1 == 'value1-2viaproxy'

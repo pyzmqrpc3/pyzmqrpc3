@@ -97,14 +97,14 @@ def test_req_rep_sockets_without_password(
 
     sender.send('test', time_out_in_sec=3)
 
-    assert receiver_thread.get_last_received_message() == 'test'
-
     receiver_thread.stop()
     receiver_thread.join()
     sender.destroy()
 
     # Cleaning up sockets takes some time
     close_socket_delay()
+
+    assert receiver_thread.get_last_received_message() == 'test'
 
 
 def test_pub_sub_without_passwords(
@@ -131,14 +131,14 @@ def test_pub_sub_without_passwords(
     # send_pub_socket
     two_sec_delay()
 
-    assert receiver_thread.get_last_received_message() == 'test'
-
     receiver_thread.stop()
     receiver_thread.join()
     sender.destroy()
 
     # Cleaning up sockets takes some time
     close_socket_delay()
+
+    assert receiver_thread.get_last_received_message() == 'test'
 
 
 def test_pub_sub_timeout(
@@ -190,7 +190,6 @@ def test_pub_sub_timeout(
     sender.send('test4')
     two_sec_delay()
 
-    assert receiver_thread.get_last_received_message() == 'test4'
     assert receiver_thread.get_sub_socket(idx=0).zmq_socket == second_socket
 
     receiver_thread.stop()
@@ -199,6 +198,8 @@ def test_pub_sub_timeout(
 
     # Cleaning up sockets takes some time
     close_socket_delay()
+
+    assert receiver_thread.get_last_received_message() == 'test4'
 
 
 def test_pub_sub_timeout_per_socket(
@@ -263,7 +264,6 @@ def test_pub_sub_timeout_per_socket(
     sender.send('test4')
     two_sec_delay()
 
-    assert receiver_thread.get_last_received_message() == 'test4'
     assert receiver_thread.get_sub_socket(idx=0).zmq_socket == second_socket
 
     receiver_thread.stop()
@@ -272,3 +272,5 @@ def test_pub_sub_timeout_per_socket(
 
     # Cleaning up sockets takes some time
     close_socket_delay()
+
+    assert receiver_thread.get_last_received_message() == 'test4'
