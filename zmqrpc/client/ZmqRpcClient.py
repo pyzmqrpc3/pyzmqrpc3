@@ -11,53 +11,52 @@ Edited on Oct 2020
 '''
 
 
-import json
 from typing import Optional, Tuple
 
+from ..command import ICommand, json_zip
 from ..sender import ZmqSender
 
 
 class ZmqRpcClient(ZmqSender):
     '''
     The ZmqRpcClient class implements a ZmqSender class but extends it with the
-    ability to invoke a method on a remote server. Method invocation is
-    implemented by providing a function name to invoke (function_name) and
-    the function_parameters as a dict. The constructor of the class requires
-    the ZMQ endpoints to be provided as well as (optionally) a
-    username/password to 'secure' the connection.
+    ability to execute a command on a remote server. Command execution is
+    implemented by providing a concrete instance of the ICommand type.
+    The constructor of the class requires the ZMQ endpoints to be provided
+    as well as (optionally) a username/password to 'secure' the connection.
     '''
 
-    def invoke(
+    def execute_remote(
             self,
-            function_name: str,
-            function_parameters: Tuple[object] = None,
-            time_out_in_sec: Optional[int] = 600) -> Tuple[object]:
+            command: ICommand,
+            time_out_in_sec: Optional[int] = 600) \
+            -> Optional[Tuple[object, ...]]:
         '''
-        Invokes a function on a remote ZeroMQ process and returns the result
-        of calling the function in case of a REQ socket. Parameters should
-        be a dict.
-        time_out_in_sec indicates the time to wait
-        for a response of the server. If none is received in the given time
+        Execute a command on a remote ZeroMQ process and returns the result
+        of calling the service in case of a REQ socket.
+        time_out_in_sec indicates the time to wait for a response of
+        the server. If none is received in the given time
         the system does not try again and will discard the message, never
         knowing if it was received by the server or not.
         '''
 
+        command_class_name = type(command).__name__
+
+        self._debug('sending command: "%s', command_class_name)
+
         # Try to serialize. If it fails, throw an error and exit.
-        payload = {
-            self.RPC_FUNCTION: function_name,
-        }
-
-        if function_parameters is not None:
-            payload[self.RPC_PARAMETERS] = function_parameters
-
         try:
-            message = json.dumps(payload)
+            message = json_zip(command)
         except Exception as e:
             raise RuntimeError(
-                'Cannot wrap parameters in json format. '
+                'Cannot wrap parameters in json format.'
             ) from e
 
-        return self.send(
+        ret = self.send(
             message=message,
             time_out_in_sec=time_out_in_sec,
         )
+
+        self._debug('execution result received')
+
+        return ret

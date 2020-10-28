@@ -1,6 +1,7 @@
 
 
 from .client import ZmqRpcClient
+from .command import ICommand, ShutdownServer
 from .proxy import (
     ZmqBufferedProxyRep2ReqThread,
     ZmqProxy,
@@ -16,7 +17,8 @@ from .proxy import (
 from .receiver import ZmqReceiverThread
 from .sender import ZmqSender
 from .server import ZmqRpcServerThread
+from .service import IService
 
-version_info = (3, 1, 0)
+version_info = (3, 2, 0)
 
 __version__ = '.'.join(tuple(str(x) for x in version_info))

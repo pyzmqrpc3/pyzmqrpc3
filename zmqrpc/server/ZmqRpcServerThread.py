@@ -12,9 +12,11 @@ Edited on Oct 2020
 
 
 from threading import Thread
-from typing import Callable, Dict, Optional, Tuple
+from typing import Optional, Tuple, Type
 
+from ..command import ICommand
 from ..receiver import SubSocket, SubSocketAddress
+from ..service import IService
 from .ZmqRpcServer import ZmqRpcServer
 
 
@@ -28,7 +30,6 @@ class ZmqRpcServerThread(Thread):
             self,
             zmq_rep_bind_address: Optional[str] = None,
             zmq_sub_connect_addresses: Tuple[SubSocketAddress, ...] = None,
-            rpc_functions: Dict[str, Callable] = None,
             recreate_timeout: Optional[int] = 60,
             username: Optional[str] = None,
             password: Optional[str] = None):
@@ -37,14 +38,26 @@ class ZmqRpcServerThread(Thread):
         self.__server = ZmqRpcServer(
             zmq_rep_bind_address=zmq_rep_bind_address,
             zmq_sub_connect_addresses=zmq_sub_connect_addresses,
-            rpc_functions=rpc_functions,
             recreate_timeout=recreate_timeout,
             username=username,
             password=password,
         )
 
+    @property
+    def is_running(self) -> bool:
+        return self.__server.is_running
+
     def get_last_received_message(self) -> Optional[str]:
         return self.__server.get_last_received_message()
+
+    def register_service(
+            self,
+            command_class: Type[ICommand],
+            service: IService) -> None:
+        self.__server.register_service(
+            command_class=command_class,
+            service=service,
+        )
 
     def run(self) -> None:
         self.__server.run()

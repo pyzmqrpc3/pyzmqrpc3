@@ -1,6 +1,12 @@
 
 # Change log
 
+## Version 3.2.0
+
+First production release:
+
+* Introduce command/service architecture
+
 ## Version 3.1.0
 
 Beta version release:

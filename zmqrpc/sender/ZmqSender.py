@@ -265,7 +265,7 @@ class ZmqSender(ZmqBase):
     def _send_over_req_socket(
             self,
             message: str,
-            time_out_in_sec: int = 10) -> Tuple[object]:
+            time_out_in_sec: int = 10) -> Optional[Tuple[object, ...]]:
         if self.__req_sockets is None:
             return None
 
@@ -344,7 +344,7 @@ class ZmqSender(ZmqBase):
     def send(
             self,
             message: str,
-            time_out_in_sec: int = 60) -> Tuple[object]:
+            time_out_in_sec: int = 60) -> Optional[Tuple[object, ...]]:
         # Create sockets if needed. Raise an exception if any problems are
         # encountered
         if self.__recreate_pub_socket:

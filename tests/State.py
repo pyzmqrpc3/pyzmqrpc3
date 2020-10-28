@@ -3,4 +3,4 @@
 class State:
 
     def __init__(self):
-        self.last_invoked_param1 = None
+        self.last_param1 = None

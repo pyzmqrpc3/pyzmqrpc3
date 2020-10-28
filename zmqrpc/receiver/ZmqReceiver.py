@@ -25,7 +25,7 @@ from .SubSocket import SubSocket, SubSocketAddress
 class ZmqReceiver(ZmqBase):
     '''
     A ZmqReceiver class will listen on a REP or SUB socket for messages
-    and will invoke a 'HandleIncomingMessage' method to process it.
+    and will call the 'handle_incoming_message()' method to process it.
     Subclasses should override that. A response must be implemented for
     REP sockets, but is useless for SUB sockets.
     '''
@@ -76,6 +76,10 @@ class ZmqReceiver(ZmqBase):
 
         self.__last_received_message = None
         self.__is_running = False
+
+    @property
+    def is_running(self) -> bool:
+        return self.__is_running
 
     def stop(self) -> None:
         '''
