@@ -8,8 +8,8 @@
 
 This Python package adds basic Remote Procedure Call (RPC) functionalities to
 ZeroMQ.
-It does not do advanced serializing, but simply uses JSON call and
-response structures.
+The supported command/service architecture allows for complex serialization of
+user defined data and modern-looking implementation.
 
 ## Install
 
@@ -17,35 +17,109 @@ response structures.
 
 ## Usage
 
-Implement a function on the server that can be invoked:
+Implement a concrete class of the interface class `ICommand` that can
+de/serialize itself and has a default constructor
+(i.e. can be constructed without any arguments):
 
-    def test_method(param1, param2):
-        return param1 + param2
+    from zmqrpc import ICommand
 
-Create a ZeroMQ server:
+    class SimpleCommand(ICommand):
 
-    server = ZmqRpcServerThread(
+        def __init__(
+                self,
+                param1: Optional[str] = None,
+                param2: Optional[str] = None):
+            super().__init__()
+
+            self.__param1 = param1 or ''
+            self.__param2 = param2 or ''
+
+        @property
+        def param1(self) -> str:
+            return self.__param1
+
+        @property
+        def param2(self) -> str:
+            return self.__param2
+
+        def set_command_state(self, state: dict) -> None:
+            self.__param1 = state['param1']
+            self.__param2 = state['param2']
+
+        def get_command_state(self) -> dict:
+            return dict(
+                param1=self.param1,
+                param2=self.param2,
+            )
+
+The two methods, `set_command_state()` and `get_command_state`, are
+essential for marshaling the command data between the client and the server.
+It is the user's responsibility to make sure that the implementation of these
+methods is correct to avoid any data loss.
+Both the client and server side need to be aware of the concrete command
+implementation.
+
+Implement a concrete service functor which inherits from `IService` and
+handles one kind of command by the server:
+
+    from typing import Optional
+    from zmqrpc import IService
+
+    class SimpleService(IService):
+
+        def __call__(self, command: SimpleCommand) -> Optional[object]:
+            print(
+                'SimpleCommand executed with params "{0}" and "{1}"'.format(
+                    command.param1,
+                    command.param2,
+                )
+            )
+            return 'SimpleService response text for SimpleCommand is "%s"' % str(
+                dict(
+                    param1=command.param1,
+                    param2=command.param2,
+                )
+            )
+
+Although it is technically possible to make one service to handle more
+than one command,
+it is highly recommended from architecture point of view to dedicate
+one service for one command type.
+Services need not to be visible on the client side from code organization 
+point of view.
+
+On the server side, create a ZeroMQ RPC server:
+
+    from zmqrpc import ZmqRpcServer
+
+    server = ZmqRpcServer(
         zmq_rep_bind_address='tcp://*:30000',
-        rpc_functions={
-            'test_method': test_method,
-        },
     )
+
+Register all the services:
+
+    server.register_service(
+        command_class=SimpleCommand,
+        service=SimpleService(),
+    )
+
+Note that this call takes the ***actual*** command class and an ***instance***
+of the service functor.
+
+After registering all the services, start the RPC server:
+
     server.start()
 
-Create a client that connects to that server endpoint:
+On the client side, create a client that connects to that server endpoint:
 
     client = ZmqRpcClient(
         zmq_req_endpoints=['tcp://localhost:30000'],
     )
 
-Have the client invoke the function on the server:
+Have the client execute commands on the server:
 
-    client.invoke(
-        function_name='test_method',
-        function_parameters={
-            "param1": "Hello",
-            "param2": " world",
-        },
+    client.execute_remote(
+        command=SimpleCommand(param1='value1', param2='value2'),
     )
 
 For more example, look at the [examples](./examples) directory.
@@ -53,10 +127,10 @@ More examples can also be found in the [tests](./tests) directory.
 
 ## Rationale
 
-Working with ZeroMQ is great.
+Working with ZeroMQ is great!
 It is fun, fast and simply works.
 It can be used with many applications out of the box with minimal effort.
-However, there is no clear structure for RPC workflow.
+However, there is no clear structure for the RPC workflow.
 This package is a lightweight layer to bridge this gap with minimal restrictions
 on what we can already do with barebone ZMQ.
 
@@ -82,35 +156,61 @@ it shall be able to work around via proxy connections.
 
 ## Components
 
-### ZmqReceiver
+### ZmqReceiver/Thread
 
 Starts a loop listening via a SUB or REP socket for new messages.
 Multiple SUB end-points may be provided.
-If a message is received it calls `ZmqReceiver.handle_incoming_message()`
+If a message is received, it calls the `handle_incoming_message()` method
 which can be overridden by any subclassed implementation.
 
-### ZmqClient
+The thread version, `ZmqReceiverThread`, can be used for testing or with
+applications that might be running multiple server threads
+
+### ZmqSender
 
 Upon creation it starts a PUB socket and/or creates a REQ socket.
 The REQ socket may point to multiple end-points, which then use round-robin
 message delivery.
-The ZmqClient implements the `ZmqClient.send()` method that sends a message.
+The ZmqSender implements the `send()` method that sends a message.
 
 ### ZmqProxy
 
 Forwards messages from a SUB --> REQ socket or from a PUB --> REP socket using
 a receiver/sender pair.
 
+### ZmqRpcServer/Thread
+
+Implements service(s) that can be remotely executed by receiving a distinct
+command type.
+It inherits the `ZmqReceiver` functionality to listen for messages on a
+REP or SUB socket.
+However, it overrides the `handle_incoming_message()` method to deserialize
+command messages, identify their type and execute the corresponding service
+implementation.
+
+The thread version, `ZmqRpcServerThread`, can be used for testing or with
+applications that might be running multiple server threads
+
 ### ZmqRpcClient
 
-Invokes a remotely implemented method over a PUB or REQ socket.
+Executes a remotely implemented service over a PUB or REQ socket using a
+command argument.
 For PUB sockets, no response messages should be expected.
+It inherits the `ZmqSender` functionality to send messages over the wire.
 
-### ZmqRpcServer
+### ICommand
 
-Implements a method that can be remotely invoked.
-It inherits the ZmqReceiver functionality to listen for messages on a
-REP or SUB socket, deserialize the message and invoke them.
+The base interface class for all concrete command types.
+It enforces the implementation of two methods; `set_command_state` and
+`set_command_state`.
+These two methods are essential in marshaling any complex user data from the
+client side to the server side.
+
+### IService
+
+The base interface class for all concrete service functors.
+It enforces the implementation of the `__call__()` method which is the entry
+point of handling command on the server side.
 
 ## Available Standard Proxies
 
@@ -135,8 +235,6 @@ means to buffer messages and method invocations.
 
 ## Known Issues and Limitations (KIL)
 
-* Serialization is very limited and only supports types that can be serialized
-over JSON.
 * Only localhost type of testing done with passwords.
 Not sure if auth works over remote connections.
 * The `inproc://` transport of ZMQ is not supported by current implementation.

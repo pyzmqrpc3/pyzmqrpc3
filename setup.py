@@ -39,8 +39,8 @@ long_description = '''
 
 This Python package adds basic Remote Procedure Call (RPC) functionalities to
 ZeroMQ.
-It does not do advanced serializing, but simply uses JSON call and
-response structures.
+The supported command/service architecture allows for complex serialization of
+user defined data and modern-looking implementation.
 
 For more info visit the project repository at
 https://github.com/brgirgis/pyzmqrpc3
