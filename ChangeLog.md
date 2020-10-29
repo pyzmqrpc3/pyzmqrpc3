@@ -6,6 +6,8 @@
 First production release:
 
 * Introduce command/service architecture
+* Implement demo examples with proxy servers
+* Improve readme files
 
 ## Version 3.1.0
 
@@ -46,15 +48,15 @@ reconnected because the other SUB sockets were still getting messages.
 
 ## Version 1.0.1
 
-Central logging for entire zmqrpc facility. Also logs exceptions for easier
-debugging.
+* Central logging for entire zmqrpc facility
+* Also logs exceptions for easier debugging.
 
 ## Version 1.0.0
 
-Added a buffered REQ/REQ proxy which uses PUB/SUB internally.
-Bumped version number to stable release number since the library worked
+* Added a buffered REQ/REQ proxy which uses PUB/SUB internally.
+* Bumped version number to stable release number since the library worked
 fine for months and code and tests are now at a more mature level.
 
 ## Version 0.1.9 and before
 
-Internal testing.
+* Internal testing.

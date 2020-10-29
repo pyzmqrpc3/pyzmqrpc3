@@ -1,10 +1,10 @@
 
 # Examples
 
-This example is from demo_pub_sub.py. It should be relatively
-self explanatory.
-It starts an RPC server thread, registers a function, then creates an RPC
-client and execute the registered command.
+This example is from demo_pub_sub.py.
+t should be relatively self explanatory.
+It starts an RPC server thread, registers a command/service pair,
+then creates an RPC client and execute the registered command.
 
     import sys
     import time
