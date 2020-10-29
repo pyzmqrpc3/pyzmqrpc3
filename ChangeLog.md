@@ -6,7 +6,7 @@
 Minor release:
 
 * Export ZmqReceiver and ZmqRpcServer
-* cleanup package namespace
+* Cleanup package namespace
 
 ## Version 3.2.1
 
