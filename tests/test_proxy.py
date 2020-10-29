@@ -25,19 +25,21 @@ from zmqrpc import (
     ZmqSender,
 )
 
+from .Command import Command
+from .Service import Service
+from .State import State
+
 
 def test_rpc1_req_rep_with_rep_req_proxy_without_password(
         logger,
         close_socket_delay,
-        two_sec_delay,
-        call_state,
-        invoke_callback):
-    # RPC invoke method over REQ/REP sockets with an extra rep/req proxy in
-    # between
+        two_sec_delay):
     logger.info(
         'Test if invoking a method works over REQ/REP RPC socket, '
         'using an extra rep/req proxy'
     )
+
+    call_state = State()
 
     client = ZmqRpcClient(zmq_req_endpoints=['tcp://localhost:53000'])
 
@@ -49,20 +51,17 @@ def test_rpc1_req_rep_with_rep_req_proxy_without_password(
 
     server_thread = ZmqRpcServerThread(
         zmq_rep_bind_address='tcp://*:53001',
-        rpc_functions={
-            'invoke_test': partial(invoke_callback, call_state),
-        },
+    )
+    server_thread.register_service(
+        command_class=Command,
+        service=Service(state=call_state),
     )
     server_thread.start()
 
     two_sec_delay()
 
-    response = client.invoke(
-        function_name='invoke_test',
-        function_parameters={
-            'param1': 'value1',
-            'param2': 'value2',
-        },
+    response = client.execute_remote(
+        command=Command(param1='value1', param2='value2'),
         time_out_in_sec=3,
     )
 
@@ -79,21 +78,19 @@ def test_rpc1_req_rep_with_rep_req_proxy_without_password(
     close_socket_delay()
 
     assert response[0] is None
-    assert call_state.last_invoked_param1 == 'value1'
+    assert call_state.last_param1 == 'value1'
 
 
 def test_rpc1_req_rep_with_rep_req_proxy(
         logger,
         close_socket_delay,
-        two_sec_delay,
-        call_state,
-        invoke_callback):
-    # RPC invoke method over REQ/REP sockets with an extra rep/req proxy in
-    # between
+        two_sec_delay):
     logger.info(
         'Test if invoking a method works over REQ/REP RPC socket, '
         'includes a username/password and also an extra rep/req proxy'
     )
+
+    call_state = State()
 
     client = ZmqRpcClient(
         zmq_req_endpoints=['tcp://localhost:52000'],
@@ -113,22 +110,19 @@ def test_rpc1_req_rep_with_rep_req_proxy(
 
     server_thread = ZmqRpcServerThread(
         zmq_rep_bind_address='tcp://*:52001',
-        rpc_functions={
-            'invoke_test': partial(invoke_callback, call_state),
-        },
         username='username2',
         password='password2',
+    )
+    server_thread.register_service(
+        command_class=Command,
+        service=Service(state=call_state),
     )
     server_thread.start()
 
     two_sec_delay()
 
-    response = client.invoke(
-        function_name='invoke_test',
-        function_parameters={
-            'param1': 'value1test_proxy',
-            'param2': 'value2',
-        },
+    response = client.execute_remote(
+        command=Command(param1='value1test_proxy', param2='value2'),
         time_out_in_sec=3,
     )
 
@@ -145,26 +139,26 @@ def test_rpc1_req_rep_with_rep_req_proxy(
     close_socket_delay()
 
     assert response[0] is None
-    assert call_state.last_invoked_param1 == 'value1test_proxy'
+    assert call_state.last_param1 == 'value1test_proxy'
 
 
 def test_rpc1_pub_sub_with_pub_sub_proxy(
         logger,
         close_socket_delay,
-        call_state,
-        invoke_callback,
         two_sec_delay):
-    # RPC invoke method over PUB/SUB sockets and a PUB/SUB proxy
     logger.info(
         'Test if invoking a method works over PUB/SUB RPC socket '
         'and a PUB/SUB proxy in between'
     )
 
+    call_state = State()
+
     server_thread = ZmqRpcServerThread(
         zmq_sub_connect_addresses=['tcp://localhost:4567'],
-        rpc_functions={
-            'invoke_test': partial(invoke_callback, call_state),
-        },
+    )
+    server_thread.register_service(
+        command_class=Command,
+        service=Service(state=call_state),
     )
     server_thread.start()
 
@@ -179,12 +173,8 @@ def test_rpc1_pub_sub_with_pub_sub_proxy(
     # Wait a bit to avoid slow joiner...
     two_sec_delay()
 
-    response = client.invoke(
-        function_name='invoke_test',
-        function_parameters={
-            'param1': 'value2sub',
-            'param2': 'value2pub',
-        },
+    response = client.execute_remote(
+        command=Command(param1='value2sub', param2='value2pub'),
         time_out_in_sec=3,
     )
 
@@ -202,7 +192,7 @@ def test_rpc1_pub_sub_with_pub_sub_proxy(
 
     # Response should be empty with PUB/SUB
     assert response is None
-    assert call_state.last_invoked_param1 == 'value2sub'
+    assert call_state.last_param1 == 'value2sub'
 
 
 def test_proxy(logger, close_socket_delay, two_sec_delay):
@@ -273,17 +263,14 @@ def test_proxy(logger, close_socket_delay, two_sec_delay):
 def test_rpc1_req_rep_with_rep_req_buffered_proxy(
         logger,
         close_socket_delay,
-        two_sec_delay,
-        call_state,
-        invoke_callback):
-    # RPC invoke method over REQ/REP sockets with an extra rep/req proxy in
-    # between
+        two_sec_delay):
     logger.info(
         'Test if invoking a method works over Buffered REQ/REP RPC '
         'socket, includes a username/password'
     )
 
-    call_state.last_invoked_param1 = None
+    call_state = State()
+
     client = ZmqRpcClient(
         zmq_req_endpoints=['tcp://localhost:51000'],
         username='username',
@@ -304,22 +291,19 @@ def test_rpc1_req_rep_with_rep_req_buffered_proxy(
 
     server_thread = ZmqRpcServerThread(
         zmq_rep_bind_address='tcp://*:51001',
-        rpc_functions={
-            'invoke_test': partial(invoke_callback, call_state),
-        },
         username='username2',
         password='password2',
+    )
+    server_thread.register_service(
+        command_class=Command,
+        service=Service(state=call_state),
     )
     server_thread.start()
 
     two_sec_delay()
 
-    response = client.invoke(
-        function_name='invoke_test',
-        function_parameters={
-            'param1': 'value1viaproxy',
-            'param2': 'value2viaproxy',
-        },
+    response = client.execute_remote(
+        command=Command(param1='value1viaproxy', param2='value2viaproxy'),
         time_out_in_sec=30,
     )
 
@@ -331,15 +315,12 @@ def test_rpc1_req_rep_with_rep_req_buffered_proxy(
     server_thread.join()
 
     assert response[0] is None
-    assert call_state.last_invoked_param1 == 'value1viaproxy'
+    assert call_state.last_param1 == 'value1viaproxy'
 
-    call_state.last_invoked_param1 = None
-    response = client.invoke(
-        function_name='invoke_test',
-        function_parameters={
-            'param1': 'value1-2viaproxy',
-            'param2': 'value2viaproxy',
-        },
+    call_state.last_param1 = None
+
+    response = client.execute_remote(
+        command=Command(param1='value1-2viaproxy', param2='value2viaproxy'),
         time_out_in_sec=30,
     )
 
@@ -351,11 +332,12 @@ def test_rpc1_req_rep_with_rep_req_buffered_proxy(
 
     server_thread = ZmqRpcServerThread(
         zmq_rep_bind_address='tcp://*:51001',
-        rpc_functions={
-            'invoke_test': partial(invoke_callback, call_state),
-        },
         username='username2',
         password='password2',
+    )
+    server_thread.register_service(
+        command_class=Command,
+        service=Service(state=call_state),
     )
     server_thread.start()
 
@@ -372,4 +354,4 @@ def test_rpc1_req_rep_with_rep_req_buffered_proxy(
     # Cleaning up sockets takes some time
     close_socket_delay()
 
-    assert call_state.last_invoked_param1 == 'value1-2viaproxy'
+    assert call_state.last_param1 == 'value1-2viaproxy'

@@ -20,7 +20,7 @@ from .ServiceWithException import ServiceWithException
 from .State import State
 
 
-def test_valid_rpc_registration(logger):
+def test_valid_rpc_registration(logger, close_socket_delay):
     logger.info(
         'Test if invalid registrations raise errors'
     )
@@ -92,6 +92,14 @@ def test_valid_rpc_registration(logger):
         is_success = True
 
     assert is_success
+
+    server_thread.start()
+
+    server_thread.stop()
+    server_thread.join()
+
+    # Cleaning up sockets takes some time
+    close_socket_delay()
 
 
 def test_rpc_shutdown_server(logger, close_socket_delay):
