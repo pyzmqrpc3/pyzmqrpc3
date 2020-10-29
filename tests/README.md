@@ -10,7 +10,7 @@ public.
 
 Tests are split into three files:
 
-- `test_sockets`; which tests basic sender/receiver functionality
+- `test_sockets.py`; which tests the basic sender/receiver functionality
 - `test_rpc.py`; which tests the RPC client/server functionality
 - `test_proxy.py`; which tests proxy functionality with both sender/receiver
 and RPC client/server
