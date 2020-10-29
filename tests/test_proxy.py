@@ -344,6 +344,7 @@ def test_rpc1_req_rep_with_rep_req_buffered_proxy(
     # Wait some time to be sure it has been processed and the system is
     # retrying delivery. A retry cycle is max 1 sec.
     two_sec_delay()
+    two_sec_delay()
 
     server_thread.stop()
     server_thread.join()
