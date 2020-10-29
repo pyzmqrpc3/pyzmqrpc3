@@ -19,6 +19,6 @@ from .sender import ZmqSender
 from .server import ZmqRpcServerThread
 from .service import IService
 
-version_info = (3, 2, 0)
+version_info = (3, 2, 1)
 
 __version__ = '.'.join(tuple(str(x) for x in version_info))

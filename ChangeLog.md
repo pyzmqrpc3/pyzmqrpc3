@@ -1,6 +1,12 @@
 
 # Change log
 
+## Version 3.2.1
+
+Minor release:
+
+* Use mdToRst for package description generation
+
 ## Version 3.2.0
 
 First production release:

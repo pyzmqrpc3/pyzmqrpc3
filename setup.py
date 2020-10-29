@@ -3,12 +3,14 @@
 import os
 from typing import List
 
+from md_to_rst import convertMarkdownToRst
 from setuptools import setup
 
 _dir = os.path.dirname(__file__)
 
 _init_path = os.path.join(_dir, 'zmqrpc', '__init__.py')
 _req_path = os.path.join(_dir, 'requirements.txt')
+_readme_path = os.path.join(_dir, 'README.md')
 
 
 def _get_version() -> str:
@@ -31,20 +33,19 @@ def _get_requirements() -> List[str]:
     ]
 
 
-name = 'pyzmqrpc3'
-
-description = 'A simple ZMQ RPC extension with JSON for message serialization'
-
-long_description = '''
-
-This Python package adds basic Remote Procedure Call (RPC) functionalities to
-ZeroMQ.
-The supported command/service architecture allows for complex serialization of
-user defined data and modern-looking implementation.
+def _get_long_description() -> str:
+    return convertMarkdownToRst(open(_readme_path, 'r').read()) + '''
 
 For more info visit the project repository at
 https://github.com/brgirgis/pyzmqrpc3
 '''
+
+
+name = 'pyzmqrpc3'
+
+description = 'A simple ZMQ RPC extension with command/service architecture'
+
+long_description = _get_long_description()
 
 authors = {
     'Bassem': ('Bassem Girgis', 'brgirgis@gmail.com'),
