@@ -35,7 +35,7 @@ def test_rpc1_req_rep_with_rep_req_proxy_without_password(
         close_socket_delay,
         two_sec_delay):
     logger.info(
-        'Test if invoking a method works over REQ/REP RPC socket, '
+        'Test if executing commands works over REQ/REP RPC socket, '
         'using an extra rep/req proxy'
     )
 
@@ -86,7 +86,7 @@ def test_rpc1_req_rep_with_rep_req_proxy(
         close_socket_delay,
         two_sec_delay):
     logger.info(
-        'Test if invoking a method works over REQ/REP RPC socket, '
+        'Test if executing commands works over REQ/REP RPC socket, '
         'includes a username/password and also an extra rep/req proxy'
     )
 
@@ -147,7 +147,7 @@ def test_rpc1_pub_sub_with_pub_sub_proxy(
         close_socket_delay,
         two_sec_delay):
     logger.info(
-        'Test if invoking a method works over PUB/SUB RPC socket '
+        'Test if executing commands works over PUB/SUB RPC socket '
         'and a PUB/SUB proxy in between'
     )
 
@@ -265,7 +265,7 @@ def test_rpc1_req_rep_with_rep_req_buffered_proxy(
         close_socket_delay,
         two_sec_delay):
     logger.info(
-        'Test if invoking a method works over Buffered REQ/REP RPC '
+        'Test if executing commands works over Buffered REQ/REP RPC '
         'socket, includes a username/password'
     )
 
