@@ -21,6 +21,7 @@ Implement a concrete class of the interface class `ICommand` that can
 de/serialize itself and has a default constructor
 (i.e. can be constructed without any arguments):
 
+    from typing import Optional
     from zmqrpc import ICommand
 
     class SimpleCommand(ICommand):
@@ -52,15 +53,15 @@ de/serialize itself and has a default constructor
                 param2=self.param2,
             )
 
-The two methods, `set_command_state()` and `get_command_state`, are
+The two methods, `set_command_state()` and `get_command_state()`, are
 essential for marshaling the command data between the client and the server.
 It is the user's responsibility to make sure that the implementation of these
 methods is correct to avoid any data loss.
-Both the client and server side need to be aware of the concrete command
-implementation.
+Both the client and the server side need to be aware of all the system
+commands' implementations.
 
 Implement a concrete service functor which inherits from `IService` and
-handles one kind of command by the server:
+handles one kind of a command by the server:
 
     from typing import Optional
     from zmqrpc import IService
@@ -85,8 +86,8 @@ Although it is technically possible to make one service to handle more
 than one command,
 it is highly recommended from architecture point of view to dedicate
 one service for one command type.
-Services need not to be visible on the client side from code organization 
-point of view.
+Services' implementations need not to be visible on the client side
+from code organization point of view.
 
 On the server side, create a ZeroMQ RPC server:
 
@@ -122,8 +123,8 @@ Have the client execute commands on the server:
         command=SimpleCommand(param1='value1', param2='value2'),
     )
 
-For more example, look at the [examples](./examples) directory.
-More examples can also be found in the [tests](./tests) directory.
+For more examples, take a look at the [examples](./examples) directory.
+Even more examples can be found in the [tests](./tests) directory.
 
 ## Rationale
 
@@ -132,7 +133,7 @@ It is fun, fast and simply works.
 It can be used with many applications out of the box with minimal effort.
 However, there is no clear structure for the RPC workflow.
 This package is a lightweight layer to bridge this gap with minimal restrictions
-on what we can already do with barebone ZMQ.
+on what we can already do with the barebone ZMQ.
 
 ## Requirements
 
@@ -164,7 +165,7 @@ If a message is received, it calls the `handle_incoming_message()` method
 which can be overridden by any subclassed implementation.
 
 The thread version, `ZmqReceiverThread`, can be used for testing or with
-applications that might be running multiple server threads
+applications that might be running multiple server threads.
 
 ### ZmqSender
 
@@ -189,7 +190,7 @@ command messages, identify their type and execute the corresponding service
 implementation.
 
 The thread version, `ZmqRpcServerThread`, can be used for testing or with
-applications that might be running multiple server threads
+applications that might be running multiple server threads.
 
 ### ZmqRpcClient
 
@@ -201,8 +202,8 @@ It inherits the `ZmqSender` functionality to send messages over the wire.
 ### ICommand
 
 The base interface class for all concrete command types.
-It enforces the implementation of two methods; `set_command_state` and
-`set_command_state`.
+It enforces the implementation of two methods; `set_command_state()` and
+`get_command_state()`.
 These two methods are essential in marshaling any complex user data from the
 client side to the server side.
 
@@ -210,7 +211,7 @@ client side to the server side.
 
 The base interface class for all concrete service functors.
 It enforces the implementation of the `__call__()` method which is the entry
-point of handling command on the server side.
+point of handling a certain command type on the server side.
 
 ## Available Standard Proxies
 
@@ -222,7 +223,7 @@ A number of proxies are available out of the box:
 * REP to REQ by means of ZmqProxyRep2Req/Thread
 * Buffered REP to REQ via ZmqBufferedProxyRep2ReqThread
 
-Each of these proxies/proxy threads will take a message from the input
+Each of these proxies/proxy-threads will take a message from the input
 format/socket and marshal it to the output socket.
 One model could be to collect all samples from all sub-processes on a site
 and multiplex them via the proxy in a reliable manner over a REP/REQ socket.
