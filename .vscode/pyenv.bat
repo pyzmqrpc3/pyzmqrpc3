@@ -32,5 +32,5 @@ if exist "%PROJECT_PY_VER_ENV_ACTIVATE%" (
 call "%PROJECT_PY_VER_ENV_ACTIVATE%"
 python -m pip install -U pip setuptools wheel --no-warn-script-location
 python -m pip install -U -r "%PROJECT_ROOT_DIR%\requirements.txt" --no-warn-script-location
-python -m pip install -U pytest autopep8 pylint flake8
+python -m pip install -U pytest autopep8 pylint flake8 mdToRst
 python -m pip uninstall pathlib -y
