@@ -3,6 +3,9 @@
 
 ![Publish](https://github.com/brgirgis/pyzmqrpc3/workflows/Publish/badge.svg)
 ![Test](https://github.com/brgirgis/pyzmqrpc3/workflows/Test/badge.svg)
+[![Downloads](https://static.pepy.tech/personalized-badge/pyzmqrpc3?period=week&units=international_system&left_color=black&right_color=orange&left_text=Last%20Week)](https://pepy.tech/project/pyzmqrpc3)
+[![Downloads](https://static.pepy.tech/personalized-badge/pyzmqrpc3?period=month&units=international_system&left_color=black&right_color=orange&left_text=Month)](https://pepy.tech/project/pyzmqrpc3)
+[![Downloads](https://static.pepy.tech/personalized-badge/pyzmqrpc3?period=total&units=international_system&left_color=black&right_color=orange&left_text=Total)](https://pepy.tech/project/pyzmqrpc3)
 
 ## Introduction
 
